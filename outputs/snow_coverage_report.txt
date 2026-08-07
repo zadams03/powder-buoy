@@ -1,0 +1,92 @@
+SNOTEL snow coverage report
+========================================
+
+Part 6a — Per-station summary
+----------------------------------------
+Snowbird (766:UT:SNTL)
+  Install date: 1989-08-23 00:00
+  First observed date: 1989-08-23
+  Last observed date: 2026-08-06
+  Total days: 13498
+  Days with null swe_in: 0 (0.00%)
+  Days flagged is_valid = false: 0
+
+Brighton (366:UT:SNTL)
+  Install date: 1986-09-24 00:00
+  First observed date: 1986-09-24
+  Last observed date: 2026-08-06
+  Total days: 14562
+  Days with null swe_in: 0 (0.00%)
+  Days flagged is_valid = false: 0
+
+Mill-D North (628:UT:SNTL)
+  Install date: 1988-10-01 00:00
+  First observed date: 1988-10-01
+  Last observed date: 2026-08-06
+  Total days: 13824
+  Days with null swe_in: 0 (0.00%)
+  Days flagged is_valid = false: 0
+
+Thaynes Canyon (814:UT:SNTL)
+  Install date: 1988-06-20 00:00
+  First observed date: 1988-06-20
+  Last observed date: 2026-08-06
+  Total days: 13927
+  Days with null swe_in: 0 (0.00%)
+  Days flagged is_valid = false: 0
+
+Louis Meadow (972:UT:SNTL)
+  Install date: 1999-10-01 00:00
+  First observed date: 1999-10-01
+  Last observed date: 2026-08-06
+  Total days: 9807
+  Days with null swe_in: 0 (0.00%)
+  Days flagged is_valid = false: 0
+
+
+Part 6b — Per-winter coverage matrix
+----------------------------------------
+Thresholds: good >= 90% of winter days non-null; thin >= 50%; missing below 50% or station did not exist yet.
+all_station column: 'good' if at least two stations are 'good'; else 'thin' if at least two stations are 'thin' or better; else 'missing'.
+
+winter            Snowbird          Brighton          Mill-D North      Thaynes Canyon    Louis Meadow      all_station     
+1986              missing (0%)      good (100%)       missing (0%)      missing (0%)      missing (0%)      missing         
+1987              missing (0%)      good (100%)       missing (0%)      missing (0%)      missing (0%)      missing         
+1988              missing (0%)      good (100%)       good (100%)       good (100%)       missing (0%)      good            
+1989              good (100%)       good (100%)       good (100%)       good (100%)       missing (0%)      good            
+1990              good (100%)       good (100%)       good (100%)       good (100%)       missing (0%)      good            
+1991              good (100%)       good (100%)       good (100%)       good (100%)       missing (0%)      good            
+1992              good (100%)       good (100%)       good (100%)       good (100%)       missing (0%)      good            
+1993              good (100%)       good (100%)       good (100%)       good (100%)       missing (0%)      good            
+1994              good (100%)       good (100%)       good (100%)       good (100%)       missing (0%)      good            
+1995              good (100%)       good (100%)       good (100%)       good (100%)       missing (0%)      good            
+1996              good (100%)       good (100%)       good (100%)       good (100%)       missing (0%)      good            
+1997              good (100%)       good (100%)       good (100%)       good (100%)       missing (0%)      good            
+1998              good (100%)       good (100%)       good (100%)       good (100%)       missing (0%)      good            
+1999              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2000              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2001              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2002              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2003              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2004              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2005              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2006              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2007              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2008              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2009              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2010              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2011              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2012              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2013              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2014              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2015              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2016              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2017              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2018              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2019              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2020              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2021              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2022              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2023              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2024              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            
+2025              good (100%)       good (100%)       good (100%)       good (100%)       good (100%)       good            

@@ -2,7 +2,17 @@ region: utah
 buoys:
   primary: "51001"
   secondary: ["51101"]
-snow_stations: []          # populated in Session 0B
+snow_stations:
+  - id: "766:UT:SNTL"
+    name: "Snowbird"
+  - id: "366:UT:SNTL"
+    name: "Brighton"
+  - id: "628:UT:SNTL"
+    name: "Mill-D North"
+  - id: "814:UT:SNTL"
+    name: "Thaynes Canyon"
+  - id: "972:UT:SNTL"
+    name: "Louis Meadow"
 season:
   start_month_day: "11-01"
   end_month_day: "04-30"

@@ -1,7 +1,7 @@
 # SPEC.md — Powder Buoy
 
-**Version: 0.2**
-**Status: Phase 0 in progress — repo scaffold and NDBC ingest complete (Session 0A)**
+**Version: 0.3**
+**Status: Phase 0 in progress — repo scaffold, NDBC ingest, and SNOTEL ingest complete (Session 0B)**
 
 This file is the stable specification. It describes what the project is, what data it
 uses, how it must be built, and how it will be judged. It changes rarely.
@@ -276,22 +276,33 @@ We use daily SWE gain as the storm signal.
 eight inches of heavy wet snow or twenty inches of powder. If the project later wants to
 predict "good powder day" rather than "storm", temperature must be added.
 
-**Candidate Wasatch stations** (IDs to be verified during ingest, not assumed):
+**Wasatch stations** (IDs confirmed in Session 0B against the live NRCS station list;
+see `DECISIONS.md` Q3):
 
-| Station | Approx elevation | Notes |
-| --- | --- | --- |
-| Snowbird | ~9,600 ft | Little Cottonwood Canyon |
-| Brighton | ~8,750 ft | Big Cottonwood Canyon |
-| Mill-D North | ~8,960 ft | Big Cottonwood Canyon |
-| Thaynes Canyon | ~9,200 ft | Park City side |
-| Louis Meadow | ~8,000 ft | Lower elevation reference |
+| Station | Triplet ID | Elevation | Install date | Notes |
+| --- | --- | --- | --- | --- |
+| Snowbird | `766:UT:SNTL` | 9,170 ft | 1989-08-23 | Little Cottonwood Canyon |
+| Brighton | `366:UT:SNTL` | 8,790 ft | 1986-09-24 | Big Cottonwood Canyon |
+| Mill-D North | `628:UT:SNTL` | 8,940 ft | 1988-10-01 | Big Cottonwood Canyon |
+| Thaynes Canyon | `814:UT:SNTL` | 9,260 ft | 1988-06-20 | Park City side |
+| Louis Meadow | `972:UT:SNTL` | 6,740 ft | 1999-10-01 | Lower elevation reference |
 
-Station identifiers use a triplet format `{id}:{state}:SNTL`. Exact IDs must be looked
-up and confirmed against the NRCS station list during the ingest session, and recorded
-in `DECISIONS.md`. Do not hardcode unverified IDs.
+Elevations are the NRCS-reported figures and differ slightly from the approximate
+figures originally listed here; the NRCS figures are authoritative. Station identifiers
+use a triplet format `{id}:{state}:SNTL`. IDs live in `config/regions/utah.yaml`, never
+hardcoded in a module.
 
-Access is via the NRCS AWDB service. The exact endpoint and parameters are to be
-established and recorded during the SNOTEL ingest session.
+**Access method, confirmed in Session 0B:** NRCS AWDB REST API, base URL
+`https://wcc.sc.egov.usda.gov/awdbRestApi`, no API key required. Station metadata via
+`GET /services/v1/stations`; daily data via `GET /services/v1/data` with
+`elements=WTEQ,PREC,TAVG&duration=DAILY&periodRef=END`. Full parameters and a worked
+example are recorded in `DECISIONS.md` Q4.
+
+**Day definition, confirmed in Session 0B:** SNOTEL records on a fixed Pacific Standard
+Time day (UTC−8, no daylight saving), interval-ending — the daily value is dated to the
+day that just ended. This differs from `buoy_daily`'s UTC calendar day by up to 8 hours.
+Neither table is shifted to match the other; each keeps its native day definition, and
+any code joining them must account for the offset. See `DECISIONS.md` Q12.
 
 ### 3.3 Control variables — known climate signals
 
@@ -404,6 +415,7 @@ One row per station per day.
 | station | text | e.g. "51001" |
 | wvht_mean, wvht_max, wvht_min | float | metres. Null if no observations that day |
 | dpd_mean, dpd_max | float | seconds |
+| apd_mean | float | seconds. Mean of valid APD |
 | mwd_mean | float | degrees. Circular mean, not arithmetic |
 | wspd_mean, wspd_max | float | m/s |
 | pres_mean, pres_min | float | hPa |
