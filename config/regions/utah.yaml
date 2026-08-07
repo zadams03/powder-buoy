@@ -1,0 +1,8 @@
+region: utah
+buoys:
+  primary: "51001"
+  secondary: ["51101"]
+snow_stations: []          # populated in Session 0B
+season:
+  start_month_day: "11-01"
+  end_month_day: "04-30"

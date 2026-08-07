@@ -1,0 +1,24 @@
+NDBC buoy ingest report
+========================================
+
+Station 51001
+--------------------
+First date: 1981-02-11
+Last date: 2025-12-31
+Total days: 16395
+Days with n_obs = 0 (gap days): 3633
+Longest continuous gap: 2068 days (2009-12-25 to 2015-08-23)
+Percent of days with wvht_mean null: 24.17%
+Distinct positions found in source files: 0 (NDBC historical stdmet archives do not embed per-observation station coordinates; per-year repositioning cannot be checked from file content alone)
+Current listed position (NDBC station table, single present-day value, not a per-year history): 24.475 N 162.030 W
+
+Station 51101
+--------------------
+First date: 2008-02-21
+Last date: 2025-12-31
+Total days: 6524
+Days with n_obs = 0 (gap days): 651
+Longest continuous gap: 409 days (2008-03-08 to 2009-04-20)
+Percent of days with wvht_mean null: 10.01%
+Distinct positions found in source files: 0 (NDBC historical stdmet archives do not embed per-observation station coordinates; per-year repositioning cannot be checked from file content alone)
+Current listed position (NDBC station table, single present-day value, not a per-year history): 24.359 N 162.081 W

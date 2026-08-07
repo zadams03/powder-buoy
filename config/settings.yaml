@@ -1,0 +1,9 @@
+paths:
+  raw: data/raw
+  processed: data/processed
+  outputs: outputs
+defaults:
+  seed: 42
+  request_delay_seconds: 0.5
+  request_timeout_seconds: 30
+  max_retries: 3
