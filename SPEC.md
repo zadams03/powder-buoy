@@ -1,7 +1,8 @@
 # SPEC.md — Powder Buoy
 
-**Version: 0.3**
-**Status: Phase 0 in progress — repo scaffold, NDBC ingest, and SNOTEL ingest complete (Session 0B)**
+**Version: 0.4**
+**Status: Phase 0 complete — repo scaffold, NDBC ingest, SNOTEL ingest, climate index
+ingest, and `analysis_daily` all built (Session 0C). Next is Phase 4, the season split.**
 
 This file is the stable specification. It describes what the project is, what data it
 uses, how it must be built, and how it will be judged. It changes rarely.
@@ -319,6 +320,27 @@ numbers per day (RMM1, RMM2) which convert to a phase from 1 to 8 and an amplitu
 Phase says where the convection currently is around the globe. Amplitude says how strong
 it is. Amplitude below 1.0 is conventionally treated as "no coherent MJO".
 
+**Sources confirmed live in Session 0C (2026-08-07):**
+
+- **MJO — RMM index.** Australian Bureau of Meteorology, daily text file at
+  `http://www.bom.gov.au/climate/mjo/graphics/rmm.74toRealtime.txt`. Whitespace-delimited,
+  two header lines, columns `year month day RMM1 RMM2 phase amplitude method`. Missing
+  values are sentinel `1.E36` or `999`, declared in the file's own header. Returned range
+  at fetch time: 1974-06-01 to 2024-02-24. The file carries its own per-row method label,
+  which switches from `WH04_method` to `Gottschalk10_method` exactly at the 2013-12-31 /
+  2014-01-01 boundary — confirming the known method seam (Q23) but not used directly;
+  `mjo_method` is computed from the date, not trusted from this label.
+- **ENSO — ONI.** NOAA Climate Prediction Center, monthly ascii table at
+  `https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt`. Columns `SEAS YR TOTAL
+  ANOM` — a 3-month running Niño 3.4 SST anomaly, one row per overlapping season (`DJF`,
+  `JFM`, ... `NDJ`), filed under the year of the season's middle month (the standard NOAA
+  convention). `ANOM` is used as `nino34`. Returned range at fetch time: 1950 (`DJF`)
+  onward, no sentinel observed in the live record (anomalies run roughly −3 to +3).
+- **PDO.** NOAA NCEI ERSSTv5 index, monthly fixed-width table at
+  `https://www.ncei.noaa.gov/pub/data/cmb/ersst/v5/index/ersst.v5.pdo.dat`. One row per
+  year, one column per month. Missing/not-yet-occurred months are sentinel `99.99`.
+  Returned range at fetch time: 1854 onward.
+
 ### 3.4 Comparison forecasts — deferred
 
 GEFS Reforecast v12 is available free on AWS Open Data and would let us compare against
@@ -403,7 +425,9 @@ records its git commit hash.
 
 ## 5. Canonical data model
 
-All processed tables are daily, indexed by date, in UTC.
+All processed tables are daily, indexed by date. Each table's `date` is a calendar day
+in that table's own native timezone, documented per table — `buoy_daily` in UTC,
+`snow_daily` in PST (see Q12). `date` is not a globally aligned instant.
 
 ### 5.1 `buoy_daily`
 
@@ -443,35 +467,57 @@ kept as-is, not clipped. Threshold logic handles them.
 
 ### 5.3 `climate_daily`
 
+Built in Session 0C. One row per UTC calendar day, spanning the MJO source's own daily
+range — the only genuinely daily source among the three.
+
 | Column | Type | Notes |
 | --- | --- | --- |
-| date | date | |
+| date | date | UTC calendar day |
 | rmm1, rmm2 | float | MJO components |
-| mjo_phase | int | 1–8 |
-| mjo_amplitude | float | sqrt(rmm1² + rmm2²) |
-| nino34 | float | Monthly value, forward-filled within the month, flagged as such |
-| pdo | float | Monthly, same treatment |
+| mjo_phase | int (nullable) | 1–8 |
+| mjo_amplitude | float | sqrt(rmm1² + rmm2²), recomputed, never trusted from source |
+| mjo_method | text | `WH2004` (date ≤ 2013-12-31) or `modified2014` (date ≥ 2014-01-01) — the BoM method seam, flagged not smoothed (Q23) |
+| nino34 | float | Monthly ONI, attached with a one-month availability lag and held flat (Q10) |
+| nino34_is_ffilled | bool | Always true — marks the value as a carried monthly figure |
+| pdo | float | Monthly, same one-month-lag treatment as `nino34` |
+| pdo_is_ffilled | bool | Always true |
 
 ### 5.4 `analysis_daily`
 
-The joined table everything downstream reads. One row per day. Buoy columns, snow
-columns aggregated across stations, climate columns, and derived features.
+Built in Session 0C. The dumb wide join everything downstream reads. One row per date,
+full outer join of `buoy_daily`, `snow_daily`, and `climate_daily` on `date` — every date
+any source has, nulled elsewhere. No station is combined, no target/storm column exists,
+and no gap is filled; all of that is deferred to later phases (Q5, Q20, Phase 6).
+
+Column naming is prefix-by-source:
+
+| Prefix | Example | Meaning |
+| --- | --- | --- |
+| `buoy_{station}_` | `buoy_51001_wvht_mean` | One column group per buoy station, all of `buoy_daily`'s non-key columns |
+| `snow_{station_slug}_` | `snow_snowbird_swe_gain_in` | One column group per SNOTEL station (name slugified, lowercased, spaces/hyphens to `_`), all of `snow_daily`'s non-key columns, kept separate — never combined |
+| (none) | `mjo_phase`, `nino34`, `pdo_is_ffilled` | Climate columns carried through unprefixed — their names already say what they are |
+
+`buoy_daily.date` is a native UTC day and `snow_daily.date` is a native PST day (Q12);
+the join is on the calendar-date label as-is, the ~8-hour offset accepted and undisturbed
+per Q12, immaterial at the 1–2 week lag under study.
 
 ---
 
 ## 6. Phases
 
-| Phase | Goal | Reads held-out? | Status |
-| --- | --- | --- | --- |
-| 0 | Repo scaffold, config, environment | n/a | Not started |
-| 1 | NDBC buoy ingest and cleaning | n/a | Not started |
-| 2 | SNOTEL snow ingest and cleaning | n/a | Not started |
-| 3 | Climate index ingest, build `analysis_daily` | n/a | Not started |
-| 4 | **Split seasons.** Seal the held-out set | No | Not started |
-| 5 | **Exploration.** Contingency tables, then lag scan, then gated modelling (6.1) | No | Not started |
-| 6 | **Lock evaluation protocol** (Section 8) | No | Not started |
-| 7 | **Held-out evaluation.** Folklore rule and four models, run once | Yes, once | Not started |
-| 8 | Write-up. Dashboard decision (11.1) | — | Not started |
+| Phase | Goal | Reads held-out? |
+| --- | --- | --- |
+| 0 | Repo scaffold, config, environment | n/a |
+| 1 | NDBC buoy ingest and cleaning | n/a |
+| 2 | SNOTEL snow ingest and cleaning | n/a |
+| 3 | Climate index ingest, build `analysis_daily` | n/a |
+| 4 | **Split seasons.** Seal the held-out set | No |
+| 5 | **Exploration.** Contingency tables, then lag scan, then gated modelling (6.1) | No |
+| 6 | **Lock evaluation protocol** (Section 8) | No |
+| 7 | **Held-out evaluation.** Folklore rule and four models, run once | Yes, once |
+| 8 | Write-up. Dashboard decision (11.1) | — |
+
+Live phase status is tracked in STATUS.md, not here.
 
 Phases 0 to 3 are data engineering. No analysis happens in them, so the seal is not at
 risk.
