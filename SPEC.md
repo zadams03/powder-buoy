@@ -1,8 +1,9 @@
 # SPEC.md — Powder Buoy
 
-**Version: 0.4**
-**Status: Phase 0 complete — repo scaffold, NDBC ingest, SNOTEL ingest, climate index
-ingest, and `analysis_daily` all built (Session 0C). Next is Phase 4, the season split.**
+**Version: 0.5**
+**Status: Phases 0–4 complete — repo scaffold, NDBC ingest, SNOTEL ingest, climate index
+ingest, `analysis_daily`, and the season split all built (Session 0D). Held-out set
+SEALED. Next is Phase 5, exploration.**
 
 This file is the stable specification. It describes what the project is, what data it
 uses, how it must be built, and how it will be judged. It changes rarely.
@@ -672,10 +673,11 @@ All four are valid conclusions. The project succeeds by answering the question, 
 finding a signal.
 
 **Model choice:** start with logistic regression, the simplest model that outputs a
-probability. Then gradient boosting (LightGBM). No neural networks — the usable record
-is at most around 40 winters (to be confirmed in Session 0A, and fewer if 51001 proves
-unusable), far too little for a neural network, and interpretability matters more than
-raw fit here.
+probability. Then gradient boosting (LightGBM). No neural networks — Session 0A measured
+the usable record at two eras either side of the 2010–2014 buoy gap, not one unbroken
+~40-winter span, and once MJO coverage is required for the four-model comparison this
+leaves 22 usable winters (Phase 4, `DECISIONS.md` Q13/Q21). Far too little for a neural
+network either way, and interpretability matters more than raw fit here.
 
 ---
 

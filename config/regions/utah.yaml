@@ -16,3 +16,35 @@ snow_stations:
 season:
   start_month_day: "11-01"
   end_month_day: "04-30"
+seasons:
+  # Winter labelled by starting year; runs Nov 1 - Apr 30 (see SPEC 2.1).
+  # Split decided in planning (Option D, chronological within each era).
+  # See DECISIONS.md Q13 and Q21 for the full reasoning.
+  exploration:
+    - 1989
+    - 1990
+    - 1992
+    - 1994
+    - 1996
+    - 1998
+    - 1999
+    - 2000
+    - 2001
+    - 2003
+    - 2015
+    - 2016
+    - 2017
+    - 2018
+    - 2019
+    - 2020
+  held_out:
+    - 2004
+    - 2005
+    - 2006
+    - 2008
+    - 2021
+    - 2022
+  folklore_only:      # no complete MJO; usable for buoy-vs-snow counting only, never the split
+    - 2023
+    - 2024
+    - 2025
