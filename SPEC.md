@@ -1,11 +1,14 @@
 # SPEC.md — Powder Buoy
 
-**Version: 0.8**
+**Version: 0.9**
 **Status: Phases 0–4 complete; Phase 5 Stages 1–2 (counting) run on the exploration
-winters (Session 5a); the MJO mechanism check run on the same winters (Session 5b); and
-Phase 6 complete — Section 8, the evaluation protocol, is written and LOCKED (Session 6).
-Held-out set SEALED and untouched; it is unsealed exactly once, in Phase 7. Stage 3
-(modelling) is GATED and the gate did not open, so no model exists and none is tested.**
+winters (Session 5a); the MJO mechanism check run on the same winters (Session 5b);
+Phase 6 complete — Section 8, the evaluation protocol, is written and LOCKED (Session 6);
+and Phase 7 complete — the held-out set was OPENED ONCE, 2026-08-09, and the locked
+folklore rule scored on it against Section 8 as frozen at spec version 0.8. The seal is
+now spent: it cannot be re-sealed and the six held-out winters are never scored again.
+Stage 3 (modelling) is GATED and the gate did not open, so no model exists and none was
+tested. Next is Phase 8, the write-up.**
 
 This file is the stable specification. It describes what the project is, what data it
 uses, how it must be built, and how it will be judged. It changes rarely.
@@ -185,7 +188,7 @@ decades longer. 51101 is used to confirm the two agree.
 The exact separation between them and the exact usable record length of each are
 **not asserted here** — they are measured in Session 0A. If the two buoys do not
 correlate tightly over their overlap, the choice of 51001 is reconsidered (see
-`DECISIONS.md` Q1 and Q17).
+`DECISIONS.md` Q1 and Q21).
 
 **Measured in Session 0A (2026-08-07):**
 
@@ -524,7 +527,7 @@ per Q12, immaterial at the 1–2 week lag under study.
 | 4 | **Split seasons.** Seal the held-out set | No |
 | 5 | **Exploration.** Contingency tables, then lag scan, then gated modelling (6.1) | No |
 | 6 | **Lock evaluation protocol** (Section 8) | No |
-| 7 | **Held-out evaluation.** Folklore rule and four models, run once | Yes, once |
+| 7 | **Held-out evaluation.** Folklore rule only, run once (four-model comparison not run — see 8.1) | Yes, once |
 | 8 | Write-up. Dashboard decision (11.1) | — |
 
 Live phase status is tracked in STATUS.md, not here.
@@ -541,8 +544,9 @@ Stage 2 as a documented addition to those three stages, not as one of them.
 
 Phase 6 writes Section 8 and freezes it.
 
-Phase 7 unseals the held-out set and runs once. Both the folklore rule and the
-four-model comparison are scored here, against the same locked protocol.
+Phase 7 unseals the held-out set and runs once. It scores **the locked folklore rule
+only**; the four-model comparison is **not run**, because the Stage 3 gate did not open —
+see **Section 8.1**, which is the authority here.
 
 If Phase 7 shows the buoy carries real information, a fresh planning session decides
 what happens next. That is not scoped here.
@@ -1004,14 +1008,17 @@ Phase 7 may reach for if the folklore result is dull.
 
 ## 9. Experiment register
 
-Every model run appends one row to `outputs/experiments/register.csv`. No exceptions.
+Every **scored run — model or rule-based** — appends one row to
+`outputs/experiments/register.csv`. No exceptions. The Phase 7 folklore-rule run has no
+model and is not an exception to this: it is a scored run, it touched the held-out set, and
+the register is the only audit trail of what did (SPEC 8.5).
 
 | Column | Notes |
 | --- | --- |
 | run_id | UUID |
 | timestamp | UTC |
 | git_commit | Hash of the working tree |
-| model_name | A, B, C, D, or a variant label |
+| model_name | A, B, C, D, a variant label, or the name of a scored rule |
 | features | Explicit list |
 | train_seasons, test_seasons | Explicit lists, not ranges |
 | used_holdout | Boolean. True only for the single Phase 7 run |

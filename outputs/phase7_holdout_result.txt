@@ -1,0 +1,80 @@
+PHASE 7 — HELD-OUT EVALUATION OF THE LOCKED FOLKLORE RULE
+==============================================================================
+
+THE PROJECT'S SINGLE AUTHORISED USE OF THE HELD-OUT SET. This run called load_analysis_data(include_holdout=True) once, authorised by SPEC Section 8 (LOCKED, spec version 0.8), sections 8.2 and 8.5. The seal is now spent and cannot be re-sealed (rule 2.3).
+
+Held-out winters scored (6): [2004, 2005, 2006, 2008, 2021, 2022]
+  Scored ON THEIR OWN. No exploration winter is pooled into any table below; the exploration numbers quoted at the end are Phase 5a's own, not recomputed here (SPEC 8.2). The folklore-only winters 2023-2025 are not used (SPEC 8.5).
+  Winter days in the held-out sample: 1086
+  Predictor column: buoy_51001_wvht_mean
+
+THE RULE AS EXECUTED — every value quoted from SPEC 8.2, none recomputed
+  Pop day        : buoy_51001_wvht_mean >= 3.9530 m (FIXED metre value;
+                   the 90th percentile was NOT recomputed on held-out data)
+  Pop events     : detect_events, bridge = 1 day, dated by first day
+  Storm day      : swe_gain_in >= 0.5 in at >= 2 of the 5 reporting Wasatch stations (any2)
+  Storm events   : detect_events, bridge = 1 day, dated by first day
+  Window         : storm event begins in [pop first day + 10, pop first day + 18], inclusive. One window. No lag scan.
+  Occasions      : contingency_from_flags, grouped by winter — pop occasions are pop-event first days; non-pop comparison occasions are every other day of the same held-out winters outside every pop event; both rows require a defined pop flag and a window fitting inside the same winter (SPEC 8.2, Q25).
+  Matching       : BOTH variants reported, neither privileged (SPEC 8.2).
+
+  Not run, per SPEC 8.1: no model, no MJO/ENSO/PDO feature, no lag scan, no threshold sweep, no alternative swell variable, no alternative station rule, and no re-test of the mechanism links F4-F6.
+
+DATA STATE OF THE HELD-OUT WINTERS
+  Days with an undefined pop flag (buoy 51001 not reporting): 0 of 1086. These are on neither row and are never read as 'no pop' (rule 2.5).
+  Days with all 5 SNOTEL stations reporting: 1086 of 1086; days with fewer than 2 reporting: 0; fewest stations reporting on any day: 5.
+
+RESULT — THE 2x2 UNDER BOTH MATCHING VARIANTS (SPEC 8.3)
+
+  VARIANT 1 — WITH one-to-one claiming (pops in date order claim the earliest unclaimed storm start in their window)
+                          storm began in window   no storm in window
+    pop occasion                             30                   14
+    non-pop occasion                        564                  329
+
+    storm rate given a pop = 0.6818   BASE RATE = 0.6339   ratio = 1.0755
+      (non-pop comparison occasions alone: 0.6316)
+    POD = 0.0505   POFD = 0.0408   PSS = +0.0097
+    counts: pop events = 44, usable pop occasions = 44, non-pop occasions = 893, storm events = 97, days with an undefined pop flag = 0
+
+  VARIANT 2 — WITHOUT claiming (each pop scored independently; a = pops whose window contains any storm start)
+                          storm began in window   no storm in window
+    pop occasion                             30                   14
+    non-pop occasion                        564                  329
+
+    storm rate given a pop = 0.6818   BASE RATE = 0.6339   ratio = 1.0755
+      (non-pop comparison occasions alone: 0.6316)
+    POD = 0.0505   POFD = 0.0408   PSS = +0.0097
+    counts: pop events = 44, usable pop occasions = 44, non-pop occasions = 893, storm events = 97, days with an undefined pop flag = 0
+
+  The comparison row (c, d) is identical in both variants by construction: it is a base-rate reference, not a set of competing forecasts, and is scored without claiming in both (SPEC 8.2, 8.3). Only `a` differs, and `b` with it.
+  PSS magnitude is bounded by how rare pops are in this occasion design and is not comparable across studies; SPEC 8.3 uses its SIGN.
+
+THE VERDICT — SPEC 8.4 APPLIED MECHANICALLY, NOT INTERPRETED
+  S = (ratio >= 1.20 AND PSS > 0), computed per variant.
+    with claiming   : ratio = 1.0755, PSS = +0.0097  ->  S = False
+    without claiming: ratio = 1.0755, PSS = +0.0097  ->  S = False
+
+  S holds for 0 of 2 variants.
+  >>> VERDICT: NULL CONFIRMED <<<
+
+  S holds for neither variant. The buoy pop does not raise the odds of a Wasatch storm 10-18 days later beyond the base rate, on winters no choice in this study was tuned on. This confirms the Phase 5 null out of sample and is a complete, successful result (SPEC 8.4, Section 1).
+
+THE HONEST LIMIT (SPEC 8.4, written before the number was seen)
+  Six winters give a DIRECTIONAL answer, not a precise one. This result is reported as consistent with / inconsistent with the exploration null, and NEVER as a precise effect size. No confidence interval on this sample would be narrow, and a ratio near 1.0 cannot be distinguished from a ratio of 1.15. The events counted here are dozens, and autocorrelated (Q17).
+  SPEC 8.4's advance expectation, scaled from exploration's own rates, was roughly 50 usable pop occasions and roughly 90 storm events. Measured: 44 usable pop occasions and 97 storm events.
+
+THE EXPLORATION COMPARISON (quoted from Phase 5a, NOT recomputed here)
+  Configuration: abs_p90 (3.9530 m) pop, storm 0.5 in any2, window 10-18, 16 exploration winters
+  This is the exact configuration the rule locks, so the comparison is like-for-like. Phase 5a's headline null (F2) was reported at the 1.0-inch storm definition; the locked rule uses 0.5-inch any2, and Phase 5a ran that too — these are its numbers for that cell, read off outputs/phase5a_counting_report.txt.
+
+                              storm rate given a pop   base rate   ratio
+    EXPLORATION, with claiming     0.5563               0.6308    0.8819
+    HELD-OUT,    with claiming     0.6818               0.6339    1.0755
+    EXPLORATION, without claiming  0.6197               0.6308    0.9824
+    HELD-OUT,    without claiming  0.6818               0.6339    1.0755
+  Exploration PSS at this configuration: -0.0189 (with claiming), over 142 usable pop occasions and 246 storm events across 16 winters.
+
+EXPERIMENT REGISTER (SPEC Section 9, required by SPEC 8.5)
+  One row appended to outputs/experiments/register.csv — run_id da40cb59-8aa6-4cb6-a310-9c5294b0ba73, git_commit aee80361f19f6d6338cb3e84eaef4d960ecf18aa-dirty, used_holdout True, status CONFIRMED.
+
+ONE SHOT HONOURED. The rule was run exactly once, against Section 8 as written, and was not re-run after the result was seen. Section 8 was not edited by this session; any ambiguity encountered is recorded in DECISIONS.md alongside the result, not fixed in the frozen text (rule 2.3, SPEC 8.5).
