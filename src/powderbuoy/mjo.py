@@ -87,6 +87,16 @@ GROUP_FAVOURABLE = "favourable"
 GROUP_UNFAVOURABLE = "unfavourable"
 GROUP_EXCLUDED = "excluded"
 
+# --- The BoM RMM method seam (DECISIONS.md Q23), used by the Phase 6 check ---
+# BoM computed RMM by the original Wheeler-Hendon (2004) method through
+# 2013-12-31 and by a modified method from 2014-01-01. `climate_daily.mjo_method`
+# already flags every row; these constants let a winter be assigned to one side.
+SEAM_DATE = pd.Timestamp("2014-01-01")  # first day computed by the new method
+SEAM_LAST_PRE_WINTER = 2013  # winters labelled <= this are pre-seam
+ERA_PRE_SEAM = "pre_seam"
+ERA_POST_SEAM = "post_seam"
+ERA_POOLED = "pooled"
+
 
 # --------------------------------------------------------------------------
 # Phase grouping
@@ -139,6 +149,54 @@ def coherent_mjo(df: pd.DataFrame) -> pd.Series:
         & df["mjo_amplitude"].notna()
         & (df["mjo_amplitude"] > MIN_AMPLITUDE)
     )
+
+
+# --------------------------------------------------------------------------
+# The BoM method seam — splitting winters either side of it (Phase 6, Q23)
+# --------------------------------------------------------------------------
+
+
+def seam_era(winter) -> str:
+    """Which side of the 2013/2014 BoM RMM method seam a winter sits on.
+
+    A winter is labelled by its starting year and runs Nov of that year to Apr
+    of the next (SPEC rule 2.1), so winter 2013 (Nov 2013 - Apr 2014) is the one
+    winter that genuinely straddles the seam. The rule declared for this check
+    is the simple one: winters <= 2013 are pre-seam, winters >= 2014 are
+    post-seam. That is unambiguous for this project because winter 2013 is in no
+    split at all — the 51001 archive hole (Q21) removed winters 2009-2014
+    entirely — but the straddle is real in principle, so `straddling_winters`
+    checks for it against the dates rather than assuming it away.
+    """
+    return ERA_PRE_SEAM if int(winter) <= SEAM_LAST_PRE_WINTER else ERA_POST_SEAM
+
+
+def seam_eras(df: pd.DataFrame) -> pd.Series:
+    """Vectorised `seam_era` over a frame carrying a `winter` column."""
+    return df["winter"].map(seam_era).astype("object")
+
+
+def straddling_winters(df: pd.DataFrame) -> list[int]:
+    """Winters that actually hold days on both sides of the seam date.
+
+    Measured from the dates, not assumed from the labels. A non-empty result
+    means the era split below is pooling two calculation methods inside a single
+    winter and the check would have to say so.
+    """
+    dates = pd.DatetimeIndex(df["date"])
+    frame = pd.DataFrame({"winter": df["winter"].to_numpy(), "pre": dates < SEAM_DATE})
+    by_winter = frame.groupby("winter")["pre"].nunique()
+    return sorted(int(w) for w in by_winter[by_winter > 1].index)
+
+
+def split_at_seam(df: pd.DataFrame) -> dict[str, pd.DataFrame]:
+    """Partition a frame into pooled / pre-seam / post-seam sub-frames."""
+    eras = seam_eras(df)
+    return {
+        ERA_POOLED: df,
+        ERA_PRE_SEAM: df[eras == ERA_PRE_SEAM].reset_index(drop=True),
+        ERA_POST_SEAM: df[eras == ERA_POST_SEAM].reset_index(drop=True),
+    }
 
 
 # --------------------------------------------------------------------------
@@ -514,6 +572,71 @@ def plot_link_b_sweep(sweeps: dict[str, pd.DataFrame], out_path) -> None:
     plt.close(fig)
 
 
+def plot_seam_check(link_a: pd.DataFrame, link_b: pd.DataFrame, out_path) -> None:
+    """Phase 6 Part 3 — the declared tests either side of the 2013/2014 seam."""
+    plt, (fig, axes) = _figure_axes(ncols=2, figsize=(13, 5.5))
+    era_colour = {ERA_POOLED: "#444444", ERA_PRE_SEAM: "#1f4e79", ERA_POST_SEAM: "#c00000"}
+
+    ax = axes[0]
+    x = np.arange(len(link_a))
+    ax.bar(
+        x,
+        link_a["effect_size_sd"],
+        width=0.6,
+        color=[era_colour[era] for era in link_a["era"]],
+    )
+    ax.axhline(EFFECT_SIZE_PRESENT, color="#000000", ls="--", lw=1.3,
+               label=f"declared 'present' bar = {EFFECT_SIZE_PRESENT} sd")
+    ax.axhline(EFFECT_SIZE_CLEAR, color="#000000", ls=":", lw=1.1,
+               label=f"declared 'clear' bar = {EFFECT_SIZE_CLEAR} sd")
+    ax.axhline(0.0, color="#888888", lw=0.9)
+    for xi, (value, n_fav, n_unf) in enumerate(
+        zip(link_a["effect_size_sd"], link_a["n_favourable_days"], link_a["n_unfavourable_days"])
+    ):
+        # Value above the bar, day counts inside it — the declared-bar lines run
+        # right where a two-line label above a bar would land.
+        ax.annotate(f"{value:+.3f}", (xi, value), textcoords="offset points",
+                    xytext=(0, -15), ha="center", fontsize=9.5, color="#ffffff")
+        ax.annotate(f"n={int(n_fav)}/{int(n_unf)}", (xi, value), textcoords="offset points",
+                    xytext=(0, -30), ha="center", fontsize=8, color="#ffffff")
+    ax.set_xticks(x)
+    ax.set_xticklabels([f"{era}\n({int(n)} winters)" for era, n in
+                        zip(link_a["era"], link_a["n_winters"])])
+    ax.set_ylabel("Link A effect size (sd)")
+    ax.set_ylim(min(0.0, float(link_a["effect_size_sd"].min()) * 1.4), EFFECT_SIZE_CLEAR * 1.35)
+    ax.set_title("Link A — swell, favourable minus unfavourable", fontsize=10)
+    ax.grid(alpha=0.25, axis="y")
+    ax.legend(fontsize=8, loc="upper right")
+
+    ax = axes[1]
+    cells = list(dict.fromkeys(zip(link_b["threshold_in"], link_b["window"])))
+    width = 0.26
+    for offset, era in enumerate((ERA_POOLED, ERA_PRE_SEAM, ERA_POST_SEAM)):
+        rows = link_b[link_b["era"] == era].set_index(["threshold_in", "window"])
+        values = [float(rows.loc[cell, "rate_ratio"]) for cell in cells]
+        ax.bar(np.arange(len(cells)) + (offset - 1) * width, values, width=width,
+               color=era_colour[era], label=era)
+    ax.axhline(RATE_RATIO_PRESENT, color="#000000", ls="--", lw=1.3,
+               label=f"declared 'present' bar = {RATE_RATIO_PRESENT:g}")
+    ax.axhline(1.0, color="#888888", lw=0.9)
+    ax.set_xticks(np.arange(len(cells)))
+    ax.set_xticklabels([f"{t:g} in\n{w}" for t, w in cells])
+    ax.set_ylabel("Link B rate ratio (favourable / unfavourable)")
+    ax.set_title("Link B — storm rate ratio, all four declared cells", fontsize=10)
+    ax.grid(alpha=0.25, axis="y")
+    ax.legend(fontsize=8, ncol=2)
+
+    fig.suptitle(
+        "Seam-robustness check (Phase 6, Q23) — declared Link A / Link B tests re-run either side of the\n"
+        "2013/2014 BoM RMM method seam. Exploration winters only; sub-samples are 10 and 6 winters, so this\n"
+        "is a qualitative same-direction check, not a measurement. (EXPLORATORY)",
+        fontsize=9,
+    )
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=130)
+    plt.close(fig)
+
+
 # --------------------------------------------------------------------------
 # Plain-language reads
 # --------------------------------------------------------------------------
@@ -729,6 +852,257 @@ def chain_read(
 
 
 # --------------------------------------------------------------------------
+# Phase 6 Part 3 — seam-robustness check (Q23), exploration data only
+# --------------------------------------------------------------------------
+
+
+def seam_check(
+    df: pd.DataFrame, wvht_column: str, gain_columns: dict[str, str]
+) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
+    """Re-run the declared Link A and Link B tests either side of the seam.
+
+    Nothing is adjusted or corrected. The Phase 5b tests are run again,
+    unchanged, on three samples — pooled, pre-seam winters, post-seam winters —
+    and reported side by side. The sub-samples are tiny (10 and 6 winters), so
+    the only question this can answer is qualitative: do both eras point the same
+    weak direction, or do they disagree sharply?
+
+    Exploration winters only. No held-out winter is loaded anywhere here.
+    """
+    frames = split_at_seam(df)
+    link_a_rows = []
+    link_b_rows = []
+    for era in (ERA_POOLED, ERA_PRE_SEAM, ERA_POST_SEAM):
+        frame = frames[era]
+        winters = sorted(int(w) for w in frame["winter"].unique())
+        result = link_a_declared_test(frame, wvht_column)
+        verdict, _ = link_a_verdict(result)
+        link_a_rows.append(
+            {
+                "era": era,
+                "n_winters": len(winters),
+                "winters": winters,
+                "n_favourable_days": result["n_favourable_days"],
+                "n_unfavourable_days": result["n_unfavourable_days"],
+                "mean_favourable_m": result["mean_favourable_m"],
+                "mean_unfavourable_m": result["mean_unfavourable_m"],
+                "difference_in_means_m": result["difference_in_means_m"],
+                "pooled_sd_m": result["pooled_sd_m"],
+                "effect_size_sd": result["effect_size_sd"],
+                "verdict": verdict,
+            }
+        )
+        for threshold in (PRIMARY_STORM_THRESHOLD_IN, SENSITIVITY_STORM_THRESHOLD_IN):
+            for window in (SAME_DAY_WINDOW, LAGGED_WINDOW):
+                cell = link_b_declared_test(
+                    frame, gain_columns, threshold, STORM_COMBINATION, window
+                )
+                b_verdict, _ = link_b_verdict(cell)
+                link_b_rows.append({"era": era, "n_winters": len(winters), **cell,
+                                    "verdict": b_verdict})
+
+    meta = {
+        "winters_pooled": sorted(int(w) for w in df["winter"].unique()),
+        "winters_pre_seam": sorted(int(w) for w in frames[ERA_PRE_SEAM]["winter"].unique()),
+        "winters_post_seam": sorted(int(w) for w in frames[ERA_POST_SEAM]["winter"].unique()),
+        "straddling_winters": straddling_winters(df),
+    }
+    return pd.DataFrame(link_a_rows), pd.DataFrame(link_b_rows), meta
+
+
+def seam_check_read(link_a: pd.DataFrame, link_b: pd.DataFrame) -> list[str]:
+    """Do both eras point the same way? Stated from the numbers, not asserted."""
+    by_era = link_a.set_index("era")
+    pre = float(by_era.loc[ERA_PRE_SEAM, "effect_size_sd"])
+    post = float(by_era.loc[ERA_POST_SEAM, "effect_size_sd"])
+    pooled = float(by_era.loc[ERA_POOLED, "effect_size_sd"])
+
+    same_sign = (pre > 0) == (post > 0)
+    both_below_bar = max(pre, post) < EFFECT_SIZE_PRESENT
+    verdicts_a = set(link_a["verdict"])
+
+    lines = [
+        "DOES THE SEAM CHANGE THE STORY?",
+        "",
+        f"  Link A: pooled {pooled:+.4f} sd, pre-seam {pre:+.4f} sd, post-seam {post:+.4f} sd "
+        f"(declared bar {EFFECT_SIZE_PRESENT}).",
+    ]
+    if same_sign and both_below_bar:
+        lines.append(
+            "    Both eras point the same way and both sit below the declared 'present' bar, "
+            "so F4's"
+        )
+        lines.append(
+            "    weak-link conclusion is not an artefact of pooling two calculation methods."
+        )
+    elif same_sign:
+        lines.append(
+            "    Both eras point the same way (swell higher in favourable phases) and both sit "
+            "far below the"
+        )
+        lines.append(
+            f"    declared 'clear' mark of {EFFECT_SIZE_CLEAR} sd, but they straddle the "
+            f"'present' mark of {EFFECT_SIZE_PRESENT}:"
+        )
+        lines.append(
+            f"    pre-seam {float(by_era.loc[ERA_PRE_SEAM, 'difference_in_means_m']):+.3f} m and "
+            f"post-seam {float(by_era.loc[ERA_POST_SEAM, 'difference_in_means_m']):+.3f} m, against "
+            "within-group spreads of"
+        )
+        lines.append(
+            f"    {float(by_era.loc[ERA_PRE_SEAM, 'pooled_sd_m']):.3f} m and "
+            f"{float(by_era.loc[ERA_POST_SEAM, 'pooled_sd_m']):.3f} m. Neither era makes wave height a "
+            "usable read on MJO state, so the"
+        )
+        lines.append(
+            "    substance of F4 holds in both; the label either side of the bar does not."
+        )
+    else:
+        lines.append(
+            "    The two eras point in OPPOSITE directions. The pooled Phase 5b Link A number "
+            "must be read as method-blended."
+        )
+    lines.append(f"    Verdicts across the three samples: {sorted(verdicts_a)}.")
+    lines.append("")
+
+    lines.append("  Link B, cell by cell (a cell 'agrees' when both eras fall the same side of "
+                 f"the {RATE_RATIO_PRESENT:g} bar):")
+    agreements = 0
+    cells = list(dict.fromkeys(zip(link_b["threshold_in"], link_b["window"])))
+    for threshold, window in cells:
+        rows = link_b[
+            (link_b["threshold_in"] == threshold) & (link_b["window"] == window)
+        ].set_index("era")
+        ratios = {era: float(rows.loc[era, "rate_ratio"]) for era in
+                  (ERA_POOLED, ERA_PRE_SEAM, ERA_POST_SEAM)}
+        clears = {era: ratio >= RATE_RATIO_PRESENT for era, ratio in ratios.items()}
+        agree = clears[ERA_PRE_SEAM] == clears[ERA_POST_SEAM]
+        agreements += int(agree)
+        lines.append(
+            f"    {threshold:g} in {STORM_COMBINATION}, window {window}: "
+            f"pooled {ratios[ERA_POOLED]:.3f}, pre-seam {ratios[ERA_PRE_SEAM]:.3f}, "
+            f"post-seam {ratios[ERA_POST_SEAM]:.3f} -> "
+            f"{'same side of the bar' if agree else 'OPPOSITE sides of the bar'}"
+        )
+    lines.append(
+        f"    Eras agree in {agreements} of {len(cells)} declared Link B cells."
+    )
+    lines.append("")
+
+    # F6's actual claim was an ORDERING — Link A weaker than Link B in every
+    # framing tested — so the ordering is what the eras have to be checked on,
+    # not just each link separately.
+    lines.append("  F6's ordering (Link A weaker than Link B) re-checked in each era, at the "
+                 "primary lagged cell:")
+    primary_lagged = link_b[
+        (link_b["threshold_in"] == PRIMARY_STORM_THRESHOLD_IN) & (link_b["window"] == "1-14")
+    ].set_index("era")
+    holds = []
+    for era in (ERA_POOLED, ERA_PRE_SEAM, ERA_POST_SEAM):
+        a_verdict = str(by_era.loc[era, "verdict"])
+        b_verdict = str(primary_lagged.loc[era, "verdict"])
+        a_present = a_verdict in ("present but small", "clearly present")
+        b_present = b_verdict in ("present but small", "clearly present")
+        ordering = "holds" if (b_present and not a_present) else (
+            "reversed" if (a_present and not b_present) else "neither link clears its bar"
+        )
+        holds.append(ordering)
+        lines.append(
+            f"    {era}: Link A '{a_verdict}', Link B '{b_verdict}' -> {ordering}"
+        )
+    lines.append("")
+    lines.append(
+        "  Sample sizes are the whole caveat: 10 pre-seam and 6 post-seam winters. This check can "
+        "only"
+    )
+    lines.append(
+        "  say whether the two eras point the same weak direction. It cannot measure the seam's "
+        "size, and"
+    )
+    lines.append(
+        "  no era-specific number here is a finding — every one is EXPLORATORY context "
+        "(rule 2.3)."
+    )
+    return lines
+
+
+def run_seam_check(argv_region: str = "utah") -> str:
+    """Assemble the Part 3 report. Exploration winters only, by construction."""
+    config = load_config(argv_region)
+    outputs_dir = config["paths"]["outputs"]
+    figures_dir = outputs_dir / "figures"
+    figures_dir.mkdir(parents=True, exist_ok=True)
+
+    df = load_exploration_frame(argv_region)
+    gain_columns = snow_gain_columns(config)
+    wvht_column = f"buoy_{config['buoys']['primary']}_wvht_mean"
+
+    link_a, link_b, meta = seam_check(df, wvht_column, gain_columns)
+
+    out: list[str] = []
+    out.append("PHASE 6, PART 3 — SEAM-ROBUSTNESS CHECK (DECISIONS.md Q23)")
+    out.append(
+        "The Phase 5b declared tests, re-run unchanged either side of the BoM RMM method seam "
+        "at"
+    )
+    out.append(
+        "2013-12-31 / 2014-01-01. Nothing is adjusted or corrected — this is split-and-compare, "
+        "reported not fixed."
+    )
+    out.append("EXPLORATORY — exploration winters only, and this session locks the protocol "
+               "rather than testing it (rule 2.3).")
+    out.append("")
+    out.append("SEAL CHECK — the winters this check touched:")
+    out.append(f"  pooled ({len(meta['winters_pooled'])}):    {meta['winters_pooled']}")
+    out.append(f"  pre-seam ({len(meta['winters_pre_seam'])}):  {meta['winters_pre_seam']}")
+    out.append(f"  post-seam ({len(meta['winters_post_seam'])}): {meta['winters_post_seam']}")
+    out.append(
+        "  Held-out winters (2004, 2005, 2006, 2008, 2021, 2022): NOT touched — "
+        "include_holdout was never set True."
+    )
+    out.append(
+        f"  Winters holding days on BOTH sides of the seam: {meta['straddling_winters'] or 'none'} "
+        "(measured from the dates, not assumed)."
+    )
+    out.append("")
+
+    out.append("LINK A — swell, favourable (6,7,8) vs unfavourable (2,3,4), amplitude > 1:")
+    out.append(
+        _table(
+            link_a[
+                ["era", "n_winters", "n_favourable_days", "n_unfavourable_days",
+                 "mean_favourable_m", "mean_unfavourable_m", "difference_in_means_m",
+                 "pooled_sd_m", "effect_size_sd", "verdict"]
+            ]
+        )
+    )
+    out.append("")
+    out.append("LINK B — storm rate by phase group, beside the base rate (rule 2.2):")
+    out.append(
+        _table(
+            link_b[
+                ["era", "n_winters", "threshold_in", "window", "n_favourable_days",
+                 "n_unfavourable_days", "n_storm_events", "storm_rate_favourable",
+                 "storm_rate_unfavourable", "base_rate", "rate_ratio", "pss", "verdict"]
+            ]
+        )
+    )
+    out.append("")
+
+    figure_path = figures_dir / "mjo_seam_check.png"
+    plot_seam_check(link_a, link_b, figure_path)
+    out.append(f"Figure saved: {figure_path}")
+    out.append("")
+    out.extend(seam_check_read(link_a, link_b))
+
+    text = "\n".join(out)
+    report_path = outputs_dir / "phase6_seam_check_report.txt"
+    report_path.write_text(text)
+    logger.info("Wrote %s", report_path)
+    return text
+
+
+# --------------------------------------------------------------------------
 # Report assembly
 # --------------------------------------------------------------------------
 
@@ -764,10 +1138,22 @@ def main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument("--region", default="utah")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--seam-check",
+        action="store_true",
+        help=(
+            "Phase 6 Part 3 only: re-run the declared Link A/B tests either side of the "
+            "2013/2014 BoM method seam (DECISIONS.md Q23) and stop."
+        ),
+    )
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     np.random.seed(args.seed)
+
+    if args.seam_check:
+        print(run_seam_check(args.region))
+        return
 
     config = load_config(args.region)
     outputs_dir = config["paths"]["outputs"]

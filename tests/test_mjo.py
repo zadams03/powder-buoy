@@ -4,13 +4,19 @@ import numpy as np
 import pandas as pd
 
 from powderbuoy.mjo import (
+    ERA_POOLED,
+    ERA_POST_SEAM,
+    ERA_PRE_SEAM,
     GROUP_EXCLUDED,
     GROUP_FAVOURABLE,
     GROUP_UNFAVOURABLE,
     link_b_declared_test,
     overlap_counts,
     phase_group,
+    seam_era,
+    split_at_seam,
     storm_in_window,
+    straddling_winters,
 )
 
 
@@ -199,6 +205,59 @@ def test_a_window_running_past_the_end_of_its_winter_is_not_an_occasion():
 
     assert result["n_favourable_days"] == 30 - 14
     assert result["n_unfavourable_days"] == 0
+
+
+# --- 5. The seam splitter (Phase 6 Part 3, DECISIONS.md Q23) -----------------
+
+
+def test_winters_are_partitioned_at_the_2013_2014_boundary():
+    # The BoM method changed at 2013-12-31 / 2014-01-01, so winter 2013 and
+    # everything before it is pre-seam and winter 2014 onward is post-seam.
+    assert seam_era(2013) == ERA_PRE_SEAM
+    assert seam_era(2014) == ERA_POST_SEAM
+    # The two eras this project actually holds, at their nearest edges.
+    assert seam_era(2003) == ERA_PRE_SEAM
+    assert seam_era(2015) == ERA_POST_SEAM
+    assert seam_era(1989) == ERA_PRE_SEAM
+    assert seam_era(2020) == ERA_POST_SEAM
+
+
+def test_split_at_seam_sends_every_row_to_exactly_one_era():
+    frame = pd.DataFrame(
+        {
+            "date": list(pd.date_range("2003-11-01", periods=3, freq="D"))
+            + list(pd.date_range("2015-11-01", periods=4, freq="D")),
+            "winter": [2003] * 3 + [2015] * 4,
+        }
+    )
+
+    split = split_at_seam(frame)
+
+    assert len(split[ERA_POOLED]) == 7
+    assert sorted(split[ERA_PRE_SEAM]["winter"].unique()) == [2003]
+    assert sorted(split[ERA_POST_SEAM]["winter"].unique()) == [2015]
+    assert len(split[ERA_PRE_SEAM]) + len(split[ERA_POST_SEAM]) == len(frame)
+
+
+def test_a_winter_straddling_the_seam_is_detected_not_assumed_away():
+    # Winter 2013 runs Nov 2013 - Apr 2014 and so genuinely holds days computed
+    # by both methods. No such winter is in any split here (the 51001 archive
+    # hole removed 2009-2014), but the check must find one if it ever appears.
+    straddling = pd.DataFrame(
+        {
+            "date": [pd.Timestamp("2013-12-30"), pd.Timestamp("2014-01-02")],
+            "winter": [2013, 2013],
+        }
+    )
+    clean = pd.DataFrame(
+        {
+            "date": [pd.Timestamp("2003-12-30"), pd.Timestamp("2016-01-02")],
+            "winter": [2003, 2015],
+        }
+    )
+
+    assert straddling_winters(straddling) == [2013]
+    assert straddling_winters(clean) == []
 
 
 def test_windows_never_cross_from_one_winter_into_the_next():
