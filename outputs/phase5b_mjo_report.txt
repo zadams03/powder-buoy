@@ -1,0 +1,202 @@
+PHASE 5b — MJO MECHANISM CHECK: WHERE THE FOLKLORE CHAIN BREAKS
+Correlation and counting only. NO MODEL IS BUILT — Stage 3 stays gated (SPEC 6.1).
+EXPLORATORY — exploration winters only, protocol not yet locked (rule 2.3).
+
+Winters used (16): [1989, 1990, 1992, 1994, 1996, 1998, 1999, 2000, 2001, 2003, 2015, 2016, 2017, 2018, 2019, 2020]
+Held-out winters: never loaded — include_holdout was never set True.
+Folklore-only winters (2023-2025) have no complete MJO coverage and are excluded, so every number below rests on the same 16 exploration winters as Phase 5a.
+
+THE DECLARED TEST (confirmatory — fixed in advance, carries weight)
+  Primary contrast: MJO phases (6, 7, 8) ('favourable') vs phases (2, 3, 4) ('unfavourable'),
+  on days where MJO amplitude > 1 (below that there is no coherent MJO). Phases (1, 5)
+  are transitional and excluded from the primary contrast. The grouping is grounded in the
+  published association between western-US winter precipitation and MJO phases 6-8 — a physically
+  motivated hypothesis, not a data-driven pick.
+  Link B framings, BOTH declared now: same-day (window 0-0) and lagged (window 1-14 days).
+  Reading rules, also declared now: Link A is 'present' at >= 0.2 sd and 'clear' at >= 0.5 sd;
+  Link B is 'present' at a rate ratio >= 1.1 and 'clear' at >= 1.25.
+
+THE DESCRIPTIVE SWEEP (exploratory — CONTEXT ONLY)
+  All 8 phases are shown individually below and in both figures. This is DESCRIPTION, NOT A TEST.
+  No observation from the sweep may be reported as a finding or a conclusion. If a single phase
+  looks high or low, that is exploratory and would require a fresh out-of-sample test to confirm;
+  it is never 'we found signal in phase N'. The sweep generates questions. Only the declared test
+  answers one.
+
+PART 1 — OVERLAP (how many winter days actually carry each series)
+  Exploration winter days total:                  2900
+  MJO phase + amplitude present:                  2900
+  Buoy 51001 wvht_mean present:                   2840
+  BOTH present (the Link A pool):                 2840
+  MJO coherent (amplitude > 1):                    1958
+  BOTH present AND MJO coherent (Link A test pool): 1911
+  Link B needs no buoy, so its pool is the 2900 MJO-present days.
+  Measured, not assumed: neither the MJO record's 2024-02-24 end nor 51001's 2010-2014 hole costs this
+  session any days — the exploration winters end 2021-04-30 and the gap winters were never in the split
+  (Q13/Q21). The shrinkage above is almost entirely the declared test's own amplitude > 1 condition.
+  UNTREATED, and flagged rather than absorbed: the BoM RMM method seam at the end of 2013 (Q23) runs
+  straight through this pool — 10 of the 16 exploration winters are pre-seam and 6 are post-seam. Q23
+  anticipated the seam going live at the four-model comparison; it is live here too, the first time
+  this project has read MJO phase for analysis. No adjustment is made (that is Phase 6's decision, and
+  making one here would be an unrequested protocol change), but every Link A and Link B number below
+  pools two calculation methods and should be read knowing it.
+
+PART 2 — LINK A: MJO <-> BUOY SWELL
+  DECLARED TEST — wave height on favourable vs unfavourable days:
+               group  n_days  mean_m  median_m   sd_m
+  favourable (6,7,8)     736  2.9798    2.8023 1.0090
+unfavourable (2,3,4)     767  2.8204    2.7225 0.7656
+  Difference in means = +0.1594 m (favourable minus unfavourable)
+  Pooled sd = 0.8931 m  ->  effect size = +0.1785 sd
+  Reference: all-day mean over 2840 defined winter days = 2.8624 m
+  READ: NOT DETECTABLE — swell differs by only +0.159 m between the groups, 0.18 sd — in the hypothesised direction, but below the declared 'present' mark of 0.2 (and it lands close to that mark, so the call is a near thing, not a rout — the bar was set before the run and is not being moved now).
+
+  DESCRIPTIVE SWEEP (context only, not a finding) — swell by phase:
+ phase     contrast  n_days  mean_wvht_m  median_wvht_m
+     1 transitional     139       2.8939         2.7333
+     2 unfavourable     214       2.6662         2.5460
+     3 unfavourable     289       2.8907         2.7858
+     4 unfavourable     264       2.8684         2.7965
+     5 transitional     269       2.9419         2.8479
+     6   favourable     241       3.0025         2.8833
+     7   favourable     295       2.9375         2.7525
+     8   favourable     200       3.0148         2.7615
+  Sweep plot saved: /Users/zacharyadams/powder-buoy/outputs/figures/mjo_link_a_swell_by_phase.png
+  Sweep shape: per-phase means span 2.666 to 3.015 m (spread 0.349 m, 0.39 sd) around an all-day mean of 2.862 m.
+  Any phase standing out here is EXPLORATORY ONLY and would require a fresh out-of-sample test to confirm.
+
+PART 3 — LINK B: MJO <-> UTAH SNOW
+  Storm events reuse the Phase 5a detector unchanged: 1 in `any2` as primary,
+  0.5 in `any2` as a sensitivity check because the 1.0-inch threshold under-counts
+  slow storms (DECISIONS.md Q26). Occasion = one day; outcome = a storm EVENT begins
+  in the window. No one-to-one claiming (nothing is being issued as a forecast), and both rows
+  are treated identically — so these numbers are comparable to each other, not to
+  Phase 5a's pop tables (Q25).
+
+  DECLARED TEST — storm rate by phase group, beside the base rate (rule 2.2):
+ threshold_in combination window  n_favourable_days  n_unfavourable_days  n_reference_days  n_storm_events  storm_rate_favourable  storm_rate_unfavourable  base_rate  rate_ratio    pod   pofd     pss
+       1.0000        any2    0-0                743                  794              2900             111                 0.0417                   0.0277     0.0383      1.5058 0.5849 0.4798  0.1051
+       1.0000        any2   1-14                694                  740              2676             111                 0.4164                   0.3676     0.4525      1.1329 0.5152 0.4639  0.0512
+       0.5000        any2    0-0                743                  794              2900             246                 0.0754                   0.0894     0.0848      0.8429 0.4409 0.4872 -0.0463
+       0.5000        any2   1-14                694                  740              2676             246                 0.7680                   0.7662     0.7922      1.0023 0.4845 0.4820  0.0025
+  All four cells are declared and all four are reported. The 0.5-inch rows are the sensitivity
+  check, not a fallback to be quoted only if it agrees — Q26 gives 0.5 in the better claim to
+  being 'a Wasatch storm', so a disagreement between the rows is informative, not noise.
+
+  1 in any2, same-day (window 0-0) — 2x2 over day-occasions:
+                            storm in window   no storm in window
+    favourable (6,7,8)                  31                  712
+    unfavourable (2,3,4)                22                  772
+    storm rate favourable = 0.0417   unfavourable = 0.0277   BASE RATE = 0.0383
+    POD = 0.5849   POFD = 0.4798   PSS = 0.1051   rate ratio = 1.5058
+    storm events behind it = 111, reference occasions = 2900
+    READ: CLEARLY PRESENT — storm rate 0.0417 in favourable phases against 0.0277 in unfavourable phases (ratio 1.506), beside a base rate of 0.0383.
+
+  1 in any2, lagged (window 1-14) — 2x2 over day-occasions:
+                            storm in window   no storm in window
+    favourable (6,7,8)                 289                  405
+    unfavourable (2,3,4)               272                  468
+    storm rate favourable = 0.4164   unfavourable = 0.3676   BASE RATE = 0.4525
+    POD = 0.5152   POFD = 0.4639   PSS = 0.0512   rate ratio = 1.1329
+    storm events behind it = 111, reference occasions = 2676
+    READ: PRESENT BUT SMALL — storm rate 0.4164 in favourable phases against 0.3676 in unfavourable phases (ratio 1.133), beside a base rate of 0.4525.
+
+  DESCRIPTIVE SWEEP (context only, not a finding) — storm rate by phase, same-day (window 0-0):
+ phase     contrast  n_days  storm_rate  base_rate
+     1 transitional     151      0.0331     0.0383
+     2 unfavourable     226      0.0265     0.0383
+     3 unfavourable     297      0.0269     0.0383
+     4 unfavourable     271      0.0295     0.0383
+     5 transitional     270      0.0556     0.0383
+     6   favourable     241      0.0456     0.0383
+     7   favourable     300      0.0367     0.0383
+     8   favourable     202      0.0446     0.0383
+
+  DESCRIPTIVE SWEEP (context only, not a finding) — storm rate by phase, lagged (window 1-14 days):
+ phase     contrast  n_days  storm_rate  base_rate
+     1 transitional     128      0.5078     0.4525
+     2 unfavourable     203      0.3251     0.4525
+     3 unfavourable     278      0.3022     0.4525
+     4 unfavourable     259      0.4710     0.4525
+     5 transitional     254      0.4370     0.4525
+     6   favourable     233      0.4979     0.4525
+     7   favourable     277      0.3791     0.4525
+     8   favourable     184      0.3696     0.4525
+
+  Sweep plot saved: /Users/zacharyadams/powder-buoy/outputs/figures/mjo_link_b_storms_by_phase.png
+  Sweep shape (lagged): per-phase storm rates span 0.3022 to 0.5078 around a base rate of 0.4525; 3 of 8 phases sit above it.
+  Any phase standing out here is EXPLORATORY ONLY and would require a fresh out-of-sample test to confirm. It is not a finding and is not reported as one.
+
+PART 4 — THE CHAIN READ
+
+WHERE DOES THE CHAIN BREAK?
+
+The folklore asserts that the two ends of a three-part chain connect directly:
+MJO regime -> North Pacific swell at Hawaii -> (two weeks later) Utah snow. Phase
+5a tested the ends against each other and found nothing at any threshold or lag.
+This session tested the two internal links separately.
+
+  Link A (MJO <-> buoy swell):  NOT DETECTABLE — swell differs by only +0.159 m between the groups, 0.18 sd — in the hypothesised direction, but below the declared 'present' mark of 0.2 (and it lands close to that mark, so the call is a near thing, not a rout — the bar was set before the run and is not being moved now).
+  Link B (MJO <-> Utah snow), same-day:  CLEARLY PRESENT — storm rate 0.0417 in favourable phases against 0.0277 in unfavourable phases (ratio 1.506), beside a base rate of 0.0383.
+  Link B (MJO <-> Utah snow), lagged 1-14 days:  PRESENT BUT SMALL — storm rate 0.4164 in favourable phases against 0.3676 in unfavourable phases (ratio 1.133), beside a base rate of 0.4525.
+
+ROBUSTNESS OF LINK B — all four declared cells, not just the flattering ones:
+  1 in any2, window 0-0: favourable 0.0417 vs unfavourable 0.0277 (ratio 1.506, base rate 0.0383) -> clearly present
+  1 in any2, window 1-14: favourable 0.4164 vs unfavourable 0.3676 (ratio 1.133, base rate 0.4525) -> present but small
+  0.5 in any2, window 0-0: favourable 0.0754 vs unfavourable 0.0894 (ratio 0.843, base rate 0.0848) -> contrary
+  0.5 in any2, window 1-14: favourable 0.7680 vs unfavourable 0.7662 (ratio 1.002, base rate 0.7922) -> not detectable
+
+  Link B survives in 2 of 4 declared cells. It does NOT survive the
+  storm-threshold sensitivity check, and that matters more than it might look:
+  DECISIONS.md Q26 found that the 0.5-inch definition has the BETTER claim to being
+  'a Wasatch storm' (15.4 events per winter, inside the plausible band) while the
+  1.0-inch primary under-counts at 6.9. The cell where Link B looks best is the cell
+  built on the weaker storm definition. Read the whole row, not the best entry in it.
+
+Link A is the break. The buoy never tracked the regime closely enough to be read as
+a proxy for it, so the folklore fails at its first step and everything downstream of
+that is moot. This is the cleanest of the possible answers: the chain has a specific
+broken joint, and it is the one the folklore actually relies on. Note the shape of
+the Link A result, though — the difference is in the hypothesised direction (swell IS
+higher in phases 6-8), it is simply far too small to carry a forecast. The physical
+story is not wrong; the buoy is just a very weak instrument for reading it.
+
+Link B is the weaker half of that statement and must not be over-read. It clears
+the declared bar at the primary storm definition and fails it at the sensitivity
+definition, so what this session can honestly say is 'the MJO->snow link is
+present at best weakly here', not 'the MJO->snow link is established in this
+record'. Under either reading Link A is still the break, because Link A is weaker
+than Link B in every framing tested.
+
+TWO CAVEATS, STATED NOT BURIED.
+
+  1. Sample. 16 exploration winters, and the MJO/buoy overlap is smaller still:
+     1911 of 2900 winter days carry both a coherent MJO (amplitude > 1)
+     and a reporting buoy. The declared contrast rests on 736 favourable and
+     767 unfavourable days for Link A, and on 694 and 740 for Link B lagged — and the
+     same-day framing rests on only 31 and 22 storm-start days respectively, a
+     difference of 9 events. Those day counts are not independent
+     observations: winter weather is autocorrelated and MJO phases persist for days,
+     so the effective sample is far smaller than the row counts suggest. This is a
+     coarse mechanism check, not a climatology. A weak or absent link here does NOT
+     overturn the published MJO/western-US literature; it says the signal is not
+     clearly visible at this scale (DECISIONS.md Q17).
+
+  2. MJO coverage — and a correction to the assumption behind this caveat. The BoM
+     RMM series ending 2024-02-24 and 51001's 2010-2014 hole were expected to shrink
+     the overlap. Measured, neither of them bites inside the exploration set: the
+     exploration winters end 2021-04-30, well inside the MJO record, and the winters
+     sitting in the buoy hole (2009-2014) were never part of any split to begin with
+     (Q13/Q21). MJO is present on 2900 of 2900 winter days — every one — and the buoy on
+     2840, so both are present on 2840. Those two gaps constrain Phase 7 and the
+     folklore-only winters, not this check.
+
+     What DOES shrink the sample here is the declared test's own amplitude condition:
+     942 of 2900 winter days have amplitude at or below 1 (no coherent MJO) and are
+     excluded, leaving 1958 coherent days, of which 1911 also have a reporting buoy —
+     that last figure is the pool the Link A declared test runs on. Link B needs no
+     buoy, so it runs on the 2900 MJO-present days.
+
+DISCIPLINE CHECK: every number above is EXPLORATORY (rule 2.3). The declared test is the
+weight-bearing result; the descriptive sweep is scenery and no observation from it is stated
+as a finding anywhere in this report or in DECISIONS.md. No model was built and Stage 3 remains gated.

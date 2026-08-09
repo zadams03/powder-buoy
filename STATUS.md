@@ -1,7 +1,7 @@
 # STATUS.md — Powder Buoy
 
-**Spec version: 0.6**
-**Last updated: Session 5a, 2026-08-09**
+**Spec version: 0.7**
+**Last updated: Session 5b, 2026-08-09**
 
 This file holds current state. It changes every session.
 Stable specification lives in `SPEC.md`. Open questions and findings live in
@@ -12,10 +12,24 @@ Stable specification lives in `SPEC.md`. Open questions and findings live in
 ## 1. Current state
 
 Repo scaffold, NDBC buoy ingest, SNOTEL snow ingest, climate index ingest,
-`analysis_daily`, and the season split are all complete. Phases 0–4 are done, and Phase 5
-Stages 1–2 (contingency tables and the lag scan) have now run on the exploration winters.
-Stage 3 (modelling) is **gated** and was not started. Next is the **gate review** — a
-planning conversation, not a session.
+`analysis_daily`, and the season split are all complete. Phases 0–4 are done; Phase 5
+Stages 1–2 (contingency tables and the lag scan) ran on the exploration winters in Session
+5a; and **Phase 5b, the MJO mechanism check, is now done** — it explains *why* the folklore
+is flat by testing the two internal links of the chain the folklore skips.
+
+**The null result stands, and modelling remains gated.** SPEC 6.1's Stage 3 gate condition
+was not met by the lag scan (F3), and the gate review — the joint conversation STATUS 5a
+called for — did not open it; the Phase 5b session prompt records that decision. Phase 5b
+built no model and does not reopen it. The project is heading to **Phase 6 (lock the
+evaluation protocol)** and
+then **Phase 8 (write-up)**, with Phase 7 running the locked protocol once on the sealed
+winters and expected to confirm a null.
+
+**Phase 5b in one line:** Link A (MJO ↔ buoy swell) is the break — swell is higher in
+favourable MJO phases in the right direction but by only 0.18 sd, far too weak for the buoy
+to be a usable proxy for the regime (F4, resolving Q18); Link B (MJO ↔ Utah snow) clears
+its declared bar at the primary storm definition and fails at the sensitivity one, so it is
+present at best weakly (F5); the chain read is F6.
 
 | Item | State |
 | --- | --- |
@@ -27,15 +41,23 @@ planning conversation, not a session.
 | Season split (exploration vs held-out) | **Done (0D)** — see `DECISIONS.md` Q13 |
 | Phase 5 Stage 1 — contingency tables | **Done (5a)** — `src/powderbuoy/events.py`, all EXPLORATORY |
 | Phase 5 Stage 2 — lag scan 0–30 | **Done (5a)** — all EXPLORATORY |
-| Phase 5 Stage 3 — modelling | **GATED, not started** — pending the joint gate review |
+| Phase 5 Stage 3 — modelling | **GATED, not started** — gate reviewed and not opened (F3); not reopened by 5b |
+| Phase 5b — MJO mechanism check | **Done (5b)** — `src/powderbuoy/mjo.py`, all EXPLORATORY |
 | Evaluation protocol (SPEC Section 8) | Empty — locked in Phase 6 |
 | Models | Not started (gated) |
 | Experiment register | Not created — no model run has happened yet |
 
 **Phase 5a outputs:** `outputs/phase5a_counting_report.txt`, and four figures under
 `outputs/figures/` — `storm_detector_check_2016.png`, `dose_response_curve.png`,
-`lag_scan_pss.png`, `lag_scan_pss_zscore.png`. Every number in them is EXPLORATORY
-(rule 2.3) and none may be reported as a conclusion.
+`lag_scan_pss.png`, `lag_scan_pss_zscore.png`.
+
+**Phase 5b outputs:** `outputs/phase5b_mjo_report.txt`, and two figures under
+`outputs/figures/` — `mjo_link_a_swell_by_phase.png`, `mjo_link_b_storms_by_phase.png`.
+Both figures are **descriptive sweeps** and are labelled as such on their faces: they are
+context, not tests, and no per-phase observation in them is a finding.
+
+Every number in both reports and all six Phase 5 figures is EXPLORATORY (rule 2.3) and none
+may be reported as a conclusion.
 
 **Data on disk:** `data/processed/buoy_daily.parquet` (22,919 rows, stations 51001 and
 51101); `data/processed/snow_daily.parquet` (65,618 rows, 5 Wasatch SNOTEL stations);
@@ -55,33 +77,50 @@ default (`include_holdout=False`).
 
 ## 2. Next session
 
-### The gate review — a planning conversation, not a session
+### Phase 6 planning — a conversation first, then a session
 
-Stages 1 and 2 have run. The next step is **not** a Claude Code session. It is a joint
-review of what the counting showed, which decides one thing:
+Exploration is finished. Stages 1–2 found no skill (F2, F3) and the mechanism check
+explains why (F4, F5, F6). **The next step needs a planning conversation before any
+session prompt can be written**, because it turns on a decision only the owner can make.
 
-**Is Stage 3 (modelling) warranted?** SPEC 6.1's gate condition is that Stage 2 must show
-positive skill at some lag, in a coherent band of adjacent lags, surviving sensitivity to
-pop definition and SWE threshold.
+**The decision.** Phase 6 locks SPEC Section 8 — the evaluation protocol — and it must be
+locked **expecting a null**, since the Phase 5 gate did not open. That is a real piece of
+work: a protocol written to confirm a null still has to define the target, the lag, the
+baselines, the metrics, and the numeric bar for "the buoy has skill" *before* the seal
+comes off. The alternative the owner may prefer is to go **straight to write-up (Phase 8)**
+and report the exploration result as the answer, without spending the one-shot held-out
+evaluation at all. Both are legitimate. Phase 7 is worth running only if the locked
+protocol would tell us something the exploration winters have not already said.
 
-- **If the gate opens:** Phase 5b (modelling) follows, with its own session prompt.
-- **If it does not:** Phase 5 ends at Stage 2, and Phase 6 locks a protocol that expects
-  a null result — which SPEC Section 1 states plainly is a complete and successful
-  outcome.
+**What Phase 6 planning has to settle** (all already logged, none decidable by a session on
+its own):
 
-The review reads `outputs/phase5a_counting_report.txt` and the four figures, plus the
-Stage 1 / Stage 2 findings in `DECISIONS.md` Section 2. It should weigh the detector
-caveats from Part 4 (the 1-inch threshold produces fewer events per winter than a Wasatch
-winter plausibly contains) alongside the skill numbers, since the storm definition is
-still open (Q6).
+- **The storm definition** — Q6 with Q26. 0.5 in has the better claim than the 1.0 in
+  convention, and a multi-day accumulation threshold would match the physical event better
+  than any single-day one. F5 makes this sharper: Link B's result flips sign between the
+  two thresholds, so the choice is load-bearing, not cosmetic.
+- **Station combination** — Q5 with Q20. Decide on definitional grounds; Phase 5a found no
+  signal-based argument either way.
+- **The 2×2 construction** — Q25, now pointed at from SPEC 6.1 (H4). Whether the locked
+  protocol claims one-to-one, and on which rows.
+- **The operating pop threshold** — Q16's note: chosen by a rule declared in advance, never
+  by picking the highest exploration skill.
+- **The season definition** — Q19, now due (H5). Nov–Apr is still an assumption and it
+  defines the unit everything is scored on.
+- **MJO handling** — Q23 (the 2013/14 method seam), Q28 (declare the lag by rule, not by
+  scan), Q29 (the amplitude > 1 bar excludes a third of the sample).
+- **The power question** — Q17. What size of difference counts as meaningful, stated as a
+  number before unsealing.
 
-Open questions carried into Phase 6: Q5, Q6, Q8, Q15, Q17, Q18, Q19, Q20, Q23, Q24, Q25,
-Q26 (see `DECISIONS.md`). Every Phase 5 number is EXPLORATORY (rule 2.3) — none of it may
-be reported as a conclusion.
+Open questions carried into Phase 6: Q2, Q5, Q6, Q8, Q9, Q11, Q14, Q15, Q17, Q19, Q20,
+Q23, Q24, Q25, Q26, Q27, Q28, Q29 (see `DECISIONS.md`). Q18 is now resolved (F4). Every
+Phase 5 number is EXPLORATORY (rule 2.3) — none of it may be reported as a conclusion.
 
-**Explicitly not in the next session:** reading, printing, or scoring anything from the
-six held-out winters; filling SPEC Section 8 (that is Phase 6); building any model before
-the gate review decides.
+**Explicitly not in the next session:** reading, printing, or scoring anything from the six
+held-out winters; building any model (the gate did not open); filling SPEC Section 8 before
+the Phase 6 planning conversation has settled the list above; and re-running Link A on a
+different swell variable in search of a better number (Q27 — that is the multiple-
+comparisons trap, not a follow-up).
 
 ---
 
@@ -91,6 +130,7 @@ Newest entry at the top. One row per completed session.
 
 | Session | Spec version | Date | Summary |
 | --- | --- | --- | --- |
+| 5b | 0.6 → 0.7 | 2026-08-09 | Phase 5b, the MJO mechanism check — why the folklore fails, not another attempt to make the buoy work. Correlation and counting only; **no model built**, Stage 3 still gated. Added `src/powderbuoy/mjo.py`, which tests the two internal links of the chain the folklore skips (SPEC 1.3). **The honesty spine of the session is the split between a declared test and a descriptive sweep.** The declared test was fixed in the module before any run: MJO phases 6/7/8 ("favourable") vs 2/3/4 ("unfavourable") on days with amplitude > 1.0, phases 1 and 5 excluded as transitional — grounded in the published western-US precipitation literature, not picked from the data. Its reading bars were declared with it (Link A present at ≥ 0.2 sd, clear at ≥ 0.5; Link B present at rate ratio ≥ 1.10, clear at ≥ 1.25) and were **not moved afterwards**, including when Link A landed at 0.178 sd, just under its bar. The descriptive sweep over all 8 individual phases is shown in both figures and in `DECISIONS.md`, explicitly outside the numbered findings and labelled not-a-finding. **Link A (resolves Q18, F4):** favourable-phase swell mean 2.9798 m / median 2.8023 m (n = 736 days) against unfavourable 2.8204 m / 2.7225 m (n = 767); difference +0.1594 m = **+0.1785 pooled sd** — right direction, too weak to be a proxy. **Link B (F5):** run at two pre-declared framings, same-day and lagged 1–14 days, and at both storm thresholds; holds in 2 of 4 declared cells (1.0 in `any2`: ratio 1.506 same-day, 1.133 lagged, base rates 0.0383 / 0.4525) and **fails the 0.5-in sensitivity check** (0.843 and 1.002) — which matters because Q26 gives 0.5 in the better claim to being a storm. **Chain read (F6): Link A is the break.** Coverage measured rather than assumed, correcting the session prompt's premise: neither the MJO record's 2024-02-24 end nor 51001's 2010–2014 hole costs this session any days (exploration winters end 2021-04-30; gap winters were never in the split) — MJO present on 2,900 of 2,900 winter days, buoy on 2,840, both on 2,840. What shrinks the sample is the declared test's own amplitude condition: 942 days (32.5%) have amplitude ≤ 1.0 (new Q29). `tests/test_mjo.py` added (12 tests): phase grouping including the strict amplitude bar and NA-never-guessed, base-rate sanity on synthetic data where storms are independent of phase (plus its mirror — a planted effect must still be visible), overlap counting against known gaps, lagged attribution of a D+7 storm to day D, and windows never crossing a winter boundary. All 50 tests pass. Exploration winters only (16); `include_holdout` never set True. New open questions Q27 (other swell variables — must not be run as a search), Q28 (declare the MJO lag by rule), Q29 (the amplitude bar). Housekeeping (H1–H5, clearing Phase 5a's five reported-not-fixed items): Q18 relocated then resolved, Q17's figure corrected to 22/16 winters, Q19 flagged as now due, SPEC 1.1's "roughly 2004" softened to "the mid-2000s" with a 51101-archive-starts-2008 caveat, SPEC 6.1's POD/base-rate gloss rewritten in terms of occasions with a pointer to Q25 and Phase 6; all three headers bumped to 0.7. |
 | 5a | 0.5 → 0.6 | 2026-08-09 | Phase 5 Stages 1–2 — the first look at whether the buoy carries signal, by counting. Added `src/powderbuoy/events.py`: `detect_events()` collapses an autocorrelated daily boolean series into discrete events (consecutive days are one event, a 1-day gap is bridged, each event dated by its first day, and bridging is measured in calendar days so two winters never merge); `contingency_from_flags()` builds the 2×2 over anchor-day occasions and scores POD / POFD / PSS beside the base rate. Pop definitions frozen as **sweeps** in `DECISIONS.md` Q16 **before** any matching (via `--calibrate-only`): absolute percentiles 50/75/85/90/95 → 2.7333 / 3.3111 / 3.6718 / 3.9530 / 4.4862 m, and z-score 0.5/1.0/1.5/2.0 sd over a trailing 30-day within-winter mean. Storm thresholds 0.5/1.0/1.5 in, per-station and combined (`any2`, `mean`). Storm detector validated three ways: per-winter counts (0.5 in `any2` gives 15.4 events/winter, in the plausible 15–30 band; 1.0 in gives 6.9 and 1.5 in gives 2.3 — both flagged, reported not fixed, new Q26), an eyeball plot against the 2016 SWE curve (every mark on a real step-up; one slow-accumulation storm missed), and an independent precipitation cross-check (**111 of 111** SWE-detected storm events coincide within ±1 day with a positive precipitation increment at ≥2 stations = 1.0000). Stage 1: 54 configurations, plus a 45-row per-station view for Q20. Stage 2: lag scan 0–30 for all 9 pop definitions. Four figures written. **No model built** — Stage 3 stays gated. Exploration winters only (16); `include_holdout` never set True; folklore-only winters deliberately not used, so every number rests on the same 16 winters. `tests/test_events.py` added (15 tests): event collapse, bridging, no cross-winter merging, one-to-one claiming both ways, window-fits-in-winter, noise → PSS ≈ 0, a perfect predictor → PSS > 0, percentile sweep resolution, NA-not-False, and no look-ahead in the trailing z-score. All 38 tests pass. Housekeeping: SPEC 11.1 two-era nuance (H1), SPEC 6.0 decision-resolved note (H2), STATUS Section 5 blockers past tense (H3); all three headers bumped to 0.6. |
 | 0D | 0.4 → 0.5 | 2026-08-08 | Phase 4, the season split — a decision session, not a build session. The exploration/held-out/folklore-only winter lists (decided in planning, Option D — chronological within each era) written into `config/regions/utah.yaml` as explicit lists. Added `src/powderbuoy/seasons.py`: `winter_of()` labels a date's winter start-year, and `load_analysis_data()` loads `analysis_daily` filtered to configured winters with the held-out set **excluded by default** — the seal enforced in code (rule 2.3), not just intent. Held-out (test) winters **SEALED**: 2004, 2005, 2006, 2008, 2021, 2022. Exploration: 1989, 1990, 1992, 1994, 1996, 1998, 1999, 2000, 2001, 2003, 2015–2020 (16 winters). Folklore-only (no complete MJO, never part of the split): 2023–2025. `tests/test_seasons.py` added (8 tests): winter labelling, default excludes held-out, `include_holdout=True` reveals exactly those six, no double-labelling, and loader/config agreement. No correlation, lag scan, contingency table, or model was run; no held-out values were read at any point — only year labels and row counts. Housekeeping: `DECISIONS.md` header bumped to 0.5 (H1); SPEC Section 7 tense fixed and folded in the two-era/22-usable-winters nuance from Q21 (H2). |
 | 0C | 0.3 → 0.4 | 2026-08-07 | Climate index ingest (`src/powderbuoy/ingest/climate.py`) — BoM RMM MJO (daily), NOAA CPC ONI/Niño 3.4 and NOAA NCEI PDO (monthly) → `climate_daily.parquet` (18,166 rows, 1974-06-01 to 2024-02-24). Monthly ENSO/PDO attached with a one-month availability lag and `_is_ffilled` flags — no within-month look-ahead (`DECISIONS.md` Q10 resolved). `mjo_method` column flags the BoM 2013/2014 calculation-method seam (new `DECISIONS.md` Q23), computed from date, not trusted from the source file's own per-row label. Built `analysis_daily.parquet` (19,060 rows, 1974-06-01 to 2026-08-06) — a dumb full outer join of buoy, all 5 snow stations (kept separate), and climate on `date`; buoy's 2010–2014 gap confirmed fully preserved (1,826 of 1,826 window-days null), no snow combination, no storm/target column. This completes Phases 0–3 (all data engineering); next is Phase 4. Housekeeping: SPEC Section 6 phases table's dead Status column removed (tracked in STATUS.md instead); SPEC Section 5's opening timezone line reworded to state each table's native timezone explicitly; SPEC 5.3/5.4 updated to match the tables actually built. |
@@ -134,6 +174,27 @@ The z-score rows have 2,515 defined days rather than 2,840 because the trailing 
 computed within each winter, so the first ~20 days of every winter have no z-score. Those
 days are excluded from the sample and counted, never read as "no pop" (Q24).
 
+### 4.2 Measured MJO / buoy overlap on the exploration winters (Phase 5b)
+
+Recorded because the shrinkage came from somewhere other than where it was expected. The
+planning assumption was that the MJO record's 2024-02-24 end and 51001's 2010–2014 hole
+would be what limited the overlap. Measured, neither binds inside the exploration set: the
+exploration winters end 2021-04-30, and the winters inside the buoy hole were never part of
+any split (Q13/Q21). Those two constraints are live for Phase 7 and for the folklore-only
+winters, not for this check.
+
+| Condition | Exploration winter days |
+| --- | --- |
+| Total winter days | 2,900 |
+| MJO phase + amplitude present | 2,900 (all of them) |
+| Buoy 51001 `wvht_mean` present | 2,840 |
+| Both present | 2,840 |
+| MJO coherent (amplitude > 1.0) | 1,958 |
+| Both present **and** MJO coherent — the Link A test pool | 1,911 |
+
+The binding constraint is the declared test's own amplitude condition: 942 of 2,900 days
+(32.5%) have amplitude ≤ 1.0 and are excluded as "no coherent MJO". See `DECISIONS.md` Q29.
+
 ---
 
 ## 5. Blockers
@@ -171,7 +232,11 @@ in each session prompt.
 | 0D | **New.** H2 reworded SPEC Section 7 to state the two-era, 22-usable-winter picture, but Section 11.1 still reads only "at most around 40 winters, confirmed in Session 0A" with no mention of the gap or the two eras — the two sections again describe the same fact differently, one level less starkly than the 0C finding above (both are now past-tense, but only 7 has the nuance). Session prompt's H2 scope named Section 7 only, not 11.1. | **Resolved (5a, H1).** SPEC 11.1's neural-networks bullet reworded to carry the same two-era, 22-usable-winter picture as Section 7, pointing to Q13/Q21, and no longer states "at most around 40 winters". |
 | 0D | **New.** SPEC Section 6.0 ("Dependency on Session 0A — the record-length risk") still frames Plan B as a live, unmade decision — "If we land here, **that is a decision point**... either accept weaker conclusions... or pause and reconsider scope" — but Phase 4 has now made exactly that call (Q13/Q21: proceed with a two-era, 22-winter record and a 6-winter held-out set, accepting the limitation rather than pausing). Section 6.0 was not in this session's file-update scope. | **Resolved (5a, H2).** SPEC 6.0 keeps the risk description for future readers and gains a closing paragraph recording that the decision point was reached and resolved by the Phase 4 split (Q13/Q21) — and that neither of the two stated failure modes is what materialised (correlation held at 0.98; the reposition question could not be checked at all, Q2). |
 | 0D | **New.** This file's own Section 5 (Blockers) still reads "...a live decision point when Phase 4 splits seasons" — but Phase 4 is now the session that just ran; the decision is made, not live. Same pattern as the 0B→0C staleness already resolved once in this section. Section 5 was not in this session's file-update scope (only 1, 2, 3, 6 were). | **Resolved (5a, H3).** Section 5 reworded to past tense: the gap "was the decision point Phase 4 faced and resolved", now a recorded, accepted limitation on the strength of the Phase 7 conclusion rather than an open decision. |
-| 5a | **New.** `DECISIONS.md` Q18 ("Does buoy swell actually correlate with MJO phase?") carries the plan "Schedule a quick look in Phase 5, Stage 1." Stage 1 has now run and did not look, because the Phase 5a session prompt scoped MJO out entirely (counting needs no MJO, and folklore-only winters without MJO coverage were explicitly permitted for the storm side). Q18's stated plan now points at a stage that has been completed without it. The question itself is untouched and still cheap to answer on exploration winters. | Open — owner to decide where Q18's quick look now belongs: Phase 5b if the gate opens, or the Phase 6 protocol work if it does not. Not fixed here — outside this session's scope. |
-| 5a | **New.** `DECISIONS.md` Q17 (statistical power) still reads "With at most ~40 winters and leave-one-season-out CV..." — the pre-0A planning figure. The confirmed usable count is 22 winters for the four-model comparison, 16 of them exploration (Q13/Q21, SPEC Section 7, and now SPEC 11.1 after H1). This does not weaken Q17's concern, it strengthens it: the sample is roughly half what the question was originally framed around, and Phase 5a's own event counts (dozens of independent events, not thousands) are a concrete instance of it. Q17 was not in this session's file-update scope. | Open — owner to decide whether Q17's framing figure should be updated to 22/16 winters. Reported, not fixed. |
-| 5a | **New.** SPEC 1.1 states "Since roughly 2004, a community of Utah skiers has tracked NOAA buoy 51101", but SPEC 3.1 gives 51101's record as starting ~2008, and Session 0A measured its archive as beginning 2008-02-21 with nothing before. The folklore cannot have been tracking 51101's data in 2004 — either the start date is approximate/wrong, or the community began on a different buoy. This is background text, not a data-handling rule, so nothing downstream is wrong. It does bear on interpretation, though: 10 of the 16 exploration winters (1989–2003) predate 51101 entirely, so Phase 5a's pop signal necessarily comes from 51001 as the stand-in (Q1, correlation 0.98 where they overlap) rather than from the buoy the folklore actually names. | Open — owner to decide whether SPEC 1.1's date should be softened, and whether the "folklore's own buoy did not exist for most exploration winters" caveat belongs in the Phase 6 protocol's framing. |
-| 5a | **New, minor — wording, not a numerical disagreement.** SPEC 6.1 glosses `POD = a/(a+c)` as "of all storms, how many followed a pop" and `base rate = (a+c)/(a+b+c+d)` as "how often a storm happens at all". In the frame Phase 5a had to build to make those formulas computable, the unit is an anchor day and `a+c` counts *windows that contain a storm start*, not storms — one storm can fall inside many overlapping non-pop windows, and a storm outside every window is counted by neither. The formulas are implemented exactly as SPEC writes them and the skill scores are standard; only the plain-English gloss is loose. Related: SPEC 6.1 specifies the 2×2's rows but never says how the "buoy did not pop" comparison windows are drawn, which is the single most consequential choice in the table — Phase 5a had to invent it and recorded the construction as Q25. | Open — owner to decide whether SPEC 6.1's gloss should be tightened and whether the comparison-window construction (Q25) should be written into SPEC 6.1 or left for the Phase 6 protocol in Section 8. |
+| 5a | **New.** `DECISIONS.md` Q18 ("Does buoy swell actually correlate with MJO phase?") carries the plan "Schedule a quick look in Phase 5, Stage 1." Stage 1 has now run and did not look, because the Phase 5a session prompt scoped MJO out entirely (counting needs no MJO, and folklore-only winters without MJO coverage were explicitly permitted for the storm side). Q18's stated plan now points at a stage that has been completed without it. The question itself is untouched and still cheap to answer on exploration winters. | **Resolved (5b, H1).** Q18's plan relocated to Phase 5b, where it became Link A — and the question is now itself **Resolved**, not merely relocated: F4 answers it (0.18 sd, right direction, too weak to be a proxy). |
+| 5a | **New.** `DECISIONS.md` Q17 (statistical power) still reads "With at most ~40 winters and leave-one-season-out CV..." — the pre-0A planning figure. The confirmed usable count is 22 winters for the four-model comparison, 16 of them exploration (Q13/Q21, SPEC Section 7, and now SPEC 11.1 after H1). This does not weaken Q17's concern, it strengthens it: the sample is roughly half what the question was originally framed around, and Phase 5a's own event counts (dozens of independent events, not thousands) are a concrete instance of it. Q17 was not in this session's file-update scope. | **Resolved (5b, H2).** Q17's framing figure updated to the confirmed 22 usable / 16 exploration winters, with Phase 5a's event counts (dozens, not thousands) recorded as a concrete instance and Phase 5b's phase-group day counts as a second. The question itself stays **open** — what size of difference counts as meaningful is still Phase 6's to state. |
+| 5a | **New.** SPEC 1.1 states "Since roughly 2004, a community of Utah skiers has tracked NOAA buoy 51101", but SPEC 3.1 gives 51101's record as starting ~2008, and Session 0A measured its archive as beginning 2008-02-21 with nothing before. The folklore cannot have been tracking 51101's data in 2004 — either the start date is approximate/wrong, or the community began on a different buoy. This is background text, not a data-handling rule, so nothing downstream is wrong. It does bear on interpretation, though: 10 of the 16 exploration winters (1989–2003) predate 51101 entirely, so Phase 5a's pop signal necessarily comes from 51001 as the stand-in (Q1, correlation 0.98 where they overlap) rather than from the buoy the folklore actually names. | **Resolved (5b, H3).** SPEC 1.1's "Since roughly 2004" softened to "Since the mid-2000s", with a new caveat paragraph recording that 51101's archive begins 2008-02-21, that 10 of the 16 exploration winters predate it entirely, and that the pop signal therefore comes from 51001 as the validated stand-in (Q1, Q21). Whether that caveat also belongs in the Phase 6 protocol's framing is left to Phase 6. |
+| 5a | **New, minor — wording, not a numerical disagreement.** SPEC 6.1 glosses `POD = a/(a+c)` as "of all storms, how many followed a pop" and `base rate = (a+c)/(a+b+c+d)` as "how often a storm happens at all". In the frame Phase 5a had to build to make those formulas computable, the unit is an anchor day and `a+c` counts *windows that contain a storm start*, not storms — one storm can fall inside many overlapping non-pop windows, and a storm outside every window is counted by neither. The formulas are implemented exactly as SPEC writes them and the skill scores are standard; only the plain-English gloss is loose. Related: SPEC 6.1 specifies the 2×2's rows but never says how the "buoy did not pop" comparison windows are drawn, which is the single most consequential choice in the table — Phase 5a had to invent it and recorded the construction as Q25. | **Resolved (5b, H4).** SPEC 6.1's gloss rewritten in terms of occasions — POD is now "of all storm-containing occasions, the fraction that followed a pop" and the base rate "the fraction of all occasions that contain a storm in their window" — with a new paragraph stating that one storm can fall inside many overlapping windows and one inside none. The formulas are unchanged. On the second half: the comparison-window construction is **not** written into SPEC 6.1; instead 6.1 now names it as the single most consequential unspecified choice, points at Q25, and states that Phase 6 settles it in Section 8. |
+| 5b | **New, minor — session prompt vs file numbering.** The Phase 5b prompt's File-updates checklist says "STATUS.md ... Section 4: note any new resolved items", but this file's Section 4 is **Known data state** (a table of tables), not a resolved-items log; resolved items live in Section 6, which the same checklist also names. Read as intended rather than literally: the H1–H5 resolutions are recorded in Section 6 where they belong, and Section 4 gained a new 4.2 with the measured MJO/buoy overlap, which is genuinely known-data-state and new this session. Flagged rather than guessed silently, per CLAUDE.md. | Open — owner to confirm the reading. No content is missing either way; only its placement was ambiguous. |
+| 5b | **New, structural.** SPEC 6.1 defines Phase 5 as **exactly three stages** — contingency tables, lag scan, gated modelling — and says the order "is not optional". The MJO mechanism check that ran this session is none of the three: it is not counting the buoy against snow, not a lag scan, and explicitly not modelling. So SPEC's structure for Phase 5 does not describe what Phase 5 actually contained. Compounding it, this file's Section 2 previously predicted "**If the gate opens:** Phase 5b (modelling) follows", so the label "Phase 5b" now denotes something different from what STATUS said it would, and SPEC Section 6's phases table carries no sub-phase rows at all. Nothing numerical is affected — the mechanism check reads no buoy-vs-snow contingency table and built no model — but a future reader reconciling SPEC 6.1 against the build log will not find 5b in it. | Open — owner to decide whether SPEC 6.1 should gain a fourth, non-gating item (a mechanism/diagnostic check that may run whether or not the gate opens), or whether sub-phases stay tracked in STATUS.md only. Section 2's stale prediction is rewritten this session; the structural gap in SPEC 6.1 is what remains. |
+| 5b | **New, substantive — a stale scope note that has now gone live.** `DECISIONS.md` Q23 (the BoM RMM calculation-method seam at the end of 2013) records that it "does not affect this session" for Phase 5a and that "the seam becomes live again the moment the four-model comparison uses MJO features (models B and D)". Phase 5b uses MJO features — it is the first session in the project to read `mjo_phase` for analysis rather than for ingest — so the seam went live one phase earlier than Q23 anticipates, at the mechanism check rather than at the four-model comparison. The Phase 5b pool straddles it exactly as Q23 warns: 10 of the 16 exploration winters are pre-seam (`WH2004`) and 6 post-seam (`modified2014`). No adjustment was made and none was requested; the untreated seam is flagged in `outputs/phase5b_mjo_report.txt` Part 1 so no number is read as if it came from one consistent method. | Open — owner to decide whether Q23's note should be updated to record that the seam went live in Phase 5b, and whether F4/F5 warrant a pre-seam/post-seam sensitivity split before Phase 6 uses them. Reported, not fixed — Q23 was outside this session's file-update scope. |
+| 5b | **New, minor — wording.** `DECISIONS.md` Q13's resolution says folklore-only winters are "usable later for buoy-vs-snow counting in Phase 5, which needs no MJO". Phase 5a chose not to use them (so every number rested on the same 16 winters), and Phase 5b could not use them (it needs MJO, which is exactly what they lack). No session has used them and none now will before Phase 7. The sentence is not wrong, but it describes an option that has quietly expired. | Open — owner to decide whether Q13's note should record that the folklore-only winters went unused throughout Phase 5, or be left as written. Reported, not fixed. |

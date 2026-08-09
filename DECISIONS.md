@@ -1,6 +1,6 @@
 # DECISIONS.md — Powder Buoy
 
-**Spec version: 0.6**
+**Spec version: 0.7**
 
 Append-only. Entries are never deleted. A resolved question has its status changed and
 the resolution appended — the original text stays.
@@ -31,9 +31,9 @@ Questions deliberately deferred. Each has a status and a plan for when it gets a
 | Q10 | Monthly indices (ENSO, PDO) joined to daily data | **Resolved** | Resolved in Session 0C. A month's value is treated as available from the **first day of the following month** — January's ONI/PDO value populates daily rows from 1 February onward, until superseded by February's value (available 1 March), and so on. Never interpolated between months; the last available value is held flat (a step function), matching the general "no silent fill" spirit of rule 2.5 while being an explicit, declared exception for this specific, session-specified convention. `climate_daily` carries a boolean `nino34_is_ffilled` / `pdo_is_ffilled` column, always true, marking every daily value as a carried monthly figure rather than a daily measurement. Implemented in `_lag_monthly_to_daily` (`src/powderbuoy/ingest/climate.py`): a monthly value at month M is re-labelled onto month M+1's key (the first point at which it is knowable), then held flat forward across any genuinely missing months. Verified in `tests/test_climate.py` — January's ONI value appears from 1 February, never within January, and 15 February reads January's value because February's own figure is not yet available until 1 March. If a later phase wants a different convention (e.g. a shorter or longer lag), that is a recorded protocol change, not a silent edit. |
 | Q11 | Snow quality versus storm occurrence | Deferred | SWE says how much water fell, not whether it was good skiing. Adding temperature would allow a powder-quality target. Out of scope for now (SPEC Section 11). Revisit only after the core question is answered. |
 | Q12 | Timezone alignment between buoy and snow data | **Resolved** | Buoy timestamps are UTC. SNOTEL observation dates are local. At lead times of one to two weeks a one-day offset is immaterial, but it must be documented rather than assumed away. Record the convention during the SNOTEL session. Resolved in Session 0B: SNOTEL records in Pacific Standard Time (UTC−8, fixed, no daylight saving). The daily WTEQ/PREC/TAVG value is the midnight-PST reading, assigned to the day that just ended (interval-ending convention — confirmed as the AWDB API's default `periodRef=END` behaviour, Q4). Buoy data is aggregated on UTC calendar days (`buoy_daily`, Session 0A). The two day-definitions differ by 8 hours. Neither series is shifted to match the other — `snow_daily.date` stays a native PST day, `buoy_daily.date` stays a native UTC day. At the one-to-two-week lag under study this offset is immaterial, but any code that joins the two tables must treat `date` as "the calendar day in that table's own native timezone," not as a globally aligned instant. |
-| Q17 | Statistical power — can the models even be told apart? | Open | Raised in the pre-build review (item 6). With at most ~40 winters and leave-one-season-out CV, the difference in skill between models A/B/C/D may be smaller than the error bars. "We cannot distinguish them" is a third kind of null, alongside "no signal" and "signal present". The Phase 6 protocol must state, before unsealing, what size of skill difference counts as meaningful — not just its sign. Otherwise a tiny, meaningless edge gets over-read. |
-| Q18 | Does buoy swell actually correlate with MJO phase? | Open | Raised in the review (item 8). The entire "is it just a crude MJO index" framing assumes buoy wave height and MJO state are related. Plausible but unchecked. This is cheap to look at early, on exploration seasons only, and if they turn out unrelated the central experiment's framing needs rethinking. Schedule a quick look in Phase 5, Stage 1. |
-| Q19 | Is the Nov 1 – Apr 30 season definition right? | Open | Raised in the review (item 9). The Wasatch gets snow in October and May, so the cutoff is somewhat arbitrary, yet it defines the unit that everything splits and scores on. Sensitivity to widening it (e.g. Oct 15 – May 15) should be checked once data is in. Load-bearing enough to write down; probably not worth changing. |
+| Q17 | Statistical power — can the models even be told apart? | Open — framing figure corrected in Session 5b (H2) | Raised in the pre-build review (item 6). Originally framed around "at most ~40 winters"; **the confirmed figure is 22 usable winters, 16 of them exploration and 6 held-out** (Q13/Q21, SPEC Section 7 and 11.1) — roughly half what the question was written around, which strengthens the concern rather than weakening it. With 16 exploration winters and leave-one-season-out CV, the difference in skill between models A/B/C/D may be smaller than the error bars. A concrete instance is already on record: Phase 5a's counting rests on **dozens** of independent events, not thousands — 87–265 pop events per definition and 111 storm events at 1.0 in `any2` over the 16 winters (F2). Phase 5b adds a second instance from the other direction: requiring MJO amplitude > 1 and a defined buoy day leaves a few hundred days per phase group, not thousands. "We cannot distinguish them" is a third kind of null, alongside "no signal" and "signal present". The Phase 6 protocol must state, before unsealing, what size of skill difference counts as meaningful — not just its sign. Otherwise a tiny, meaningless edge gets over-read. **Still open** — the question is what threshold of difference counts, and that is Phase 6's to answer. |
+| Q18 | Does buoy swell actually correlate with MJO phase? | **Resolved (Phase 5b, Session 5b, 2026-08-09)** | Raised in the review (item 8). The entire "is it just a crude MJO index" framing assumes buoy wave height and MJO state are related. Plausible but unchecked. This is cheap to look at early, on exploration seasons only, and if they turn out unrelated the central experiment's framing needs rethinking. ~~Schedule a quick look in Phase 5, Stage 1.~~ Stage 1 ran without it — the Phase 5a prompt scoped MJO out entirely — so the quick look moved to **Phase 5b**, this session, as its Link A. **Answered: see finding F4.** In short: **not at a useful strength.** Swell at 51001 is higher on favourable-phase days (6–8, amplitude > 1) than on unfavourable-phase days (2–4, amplitude > 1) — mean 2.9798 m against 2.8204 m, a difference of +0.1594 m — but that is only **0.18 of a pooled sd**, below the 0.2 sd bar declared before the run. The direction matches the hypothesis; the magnitude does not support the framing. **What this changes:** the central experiment's "is the buoy just a crude MJO index?" question (SPEC 1.3, Section 7 model D) now has a measured answer to its premise — the buoy is a *very* crude MJO index, crude enough that models C and D would be unlikely to separate on MJO content even if the sample allowed it (Q17). Phase 6 should frame the four-model comparison knowing this rather than assuming the buoy↔MJO relationship is strong. Reopen only if a different buoy variable (DPD/MWD filtering, Q8) or a multi-day swell aggregate turns out to track MJO state materially better — neither was tested here, and testing them would be a fresh question, not a re-run of this one. |
+| Q19 | Is the Nov 1 – Apr 30 season definition right? | Open — **now due**, flagged in Session 5b (H5) | Raised in the review (item 9). The Wasatch gets snow in October and May, so the cutoff is somewhat arbitrary, yet it defines the unit that everything splits and scores on. Sensitivity to widening it (e.g. Oct 15 – May 15) should be checked once data is in. Load-bearing enough to write down; probably not worth changing. **Status note (5b):** the Nov–Apr window is still an assumption, and it has now been load-bearing for every number in Phases 4, 5a and 5b — it defines the split unit, bounds the z-score's trailing window (Q24), and bounds every contingency window (a window that would run past 30 April is dropped rather than followed into May). **Phase 6 must decide it explicitly** — keep Nov–Apr, or widen it — because Section 8 freezes the unit everything is scored on. Not changed in 5b; that would be scope creep and would invalidate the Phase 5a numbers it shares winters with. |
 | Q20 | Might combining SNOTEL stations hide real signal? | Open — checked in Phase 5a (EXPLORATORY); combination rule still a Phase 6 decision | Raised in the review (item 7). Little Cottonwood and Big Cottonwood can get very different snowfall from the same system. Averaging or maxing across canyons (Q5) could blur a signal that is sharp at one site. Worth checking per-station behaviour in Phase 5 before committing to a combination rule in Phase 6. **Phase 5a result (EXPLORATORY):** checked at a high level, three ways — per-station, `any2` (≥2 of the reporting stations over threshold that day) and `mean` (cross-station mean over threshold). **Combining did not blur a signal that is sharp at one site, because no site shows a signal to blur.** Across all 45 per-station configurations at 1.0 in (9 pop definitions × 5 stations), storm-rate-given-pop sits below its own base rate in 44, and the single exception is Louis Meadow at z_1.5sd with PSS = +0.00005 — indistinguishable from zero. The stations do differ markedly in how many storms they record (at 1.0 in: Snowbird 10.2 events/winter, Mill-D North 4.8, Brighton and Thaynes Canyon 4.1, Louis Meadow 5.5 over its 10 measured winters), so the base rate a combination produces varies a lot — `any2` runs consistently looser than `mean` (at 1.0 in, 111 storm events vs 75). That matters for how a rate is read, but it did not change the direction of any result. Nothing here argues for or against a particular combination rule on signal grounds; Phase 6 should choose on definitional grounds (which is the more honest description of "a Wasatch storm") together with Q5 and Q6. |
 | Q21 | Primary buoy record-length risk | **Resolved (Phase 4, Session 0D, 2026-08-08)** | Raised in the review (item 5), written into SPEC Section 6.0 with a Plan B. Session 0A measured it: 51001's historical archive has no station-year files at all for 2010–2014, a 2,068-day (5.7-year) continuous gap from 2009-12-25 to 2015-08-23, on top of scattered smaller gaps (22.2% of days null overall). The two-buoy correlation is strong where they overlap (0.98, well above the 0.9 bar), so 51001 remains the right primary station — this is not a Q1 reversal. But the true continuous record is shorter than "~40 winters" implied: excluding the 2010–2014 hole, 51001 usefully covers roughly winters 1981–2009 (~28 winters) plus 2015–2025 (~10 winters), not one unbroken 40-winter span. Whether to treat this as one record with a hole, split it into two eras, or drop the shorter post-gap era is a Phase 4 decision, not a Session 0A one — Phase 4 is where seasons get chosen. Recorded here so it isn't lost before then. Linked to Q1. **Resolved by the Phase 4 split (Q13):** treated as two eras, split chronologically within each era (Option D) rather than as one record with a hole or by dropping the shorter post-gap era. 22 winters usable once MJO coverage is also required; 14 pre-gap, 8 post-gap. Neither era is dropped — both are represented in both the exploration and held-out sets. This is Plan B's decision point (SPEC 6.0), landed on: proceed with a shorter, two-era record and a correspondingly smaller (6-winter) held-out set, rather than pausing to reconsider scope — accepted as the recorded limitation in Q13. |
 | Q22 | Should `apd_mean` be added to SPEC Section 5.1's `buoy_daily` schema? | **Resolved** | Surfaced in Session 0A's consistency check. SPEC 5.1 lists `wvht_*`, `dpd_*`, `mwd_mean`, `wspd_*`, `pres_*`, and `n_obs` for `buoy_daily`, but not `apd_mean`. The Session 0A prompt's Step 5 output-schema table — captioned "matching SPEC Section 5.1" — includes `apd_mean` (mean of valid APD) anyway. `buoy_daily.parquet` was built with `apd_mean` included, following the session prompt. SPEC.md is the stable document; it should either gain `apd_mean` or the column should be dropped. Owner to decide. Added to SPEC 5.1 in Session 0B. Spec now matches the built table. |
@@ -41,6 +41,9 @@ Questions deliberately deferred. Each has a status and a plan for when it gets a
 | Q24 | Should the trailing z-score window warm up from October, rather than starting cold each winter? | Open — raised in Phase 5a | The z-score pop definition (Q16) scores each day against the trailing 30-day mean of `wvht_mean`. Phase 5a computes that window **within each winter**, so the first ~20 days of every winter have no z-score at all: 2,515 of 2,900 exploration winter days are defined, 385 are not. Those days are excluded from the sample and counted, never read as "no pop" (rule 2.5). The alternative — warming the window up from October — was deliberately not taken, for two reasons: `load_analysis_data` returns winter days only, so October days would have to be loaded outside the sanctioned loader, and a window reaching across a summer is one step closer to a window touching a sealed winter. Neither risk was worth taking for ~13% of the sample in an exploratory session. The cost is real, though: early-winter pops are invisible to the z-score definition and November is systematically under-represented in it, while the absolute/percentile definition covers the whole winter. Phase 6 should decide explicitly — warm up from a declared pre-season window, keep the cold start, or drop the z-score definition — and if it warms up, the mechanism must be auditable against rule 2.3. |
 | Q25 | The occasion and comparison-window construction behind the 2×2 must be locked in Phase 6 | Open — raised in Phase 5a | Phase 5a had to invent the counting frame, and the choices are consequential enough that Phase 6 must adopt or replace them deliberately rather than inherit them by default. Three, all documented in `contingency_from_flags`: **(1) The unit is an anchor day.** Pop occasions are pop-event first days (one per event, so a five-day swell is one forecast); non-pop comparison occasions are every other day of the same winters lying outside any pop event; days inside a pop event after its first day belong to neither row. Both rows require a defined pop flag and a window fitting inside the same winter. **(2) One-to-one claiming is applied to the pop row only** — pops in date order each claim the earliest unclaimed storm in their window — while the non-pop base-rate row scores every window independently. This is deliberately conservative for the pop row, but it is **not** a small effect: at 1.0 in `any2` the primary configuration's storm-rate-given-pop is 0.2676 with claiming and 0.3239 without, against a base rate of 0.3331. Across all 54 configurations, storm-rate-given-pop falls below the base rate in 54 with claiming and in only 32 without. Phase 6 must decide whether the locked protocol claims, and must apply whatever it decides to both rows or justify the asymmetry. **(3) PSS is bounded by pop rarity here**, because the pop row holds dozens of occasions and the comparison row thousands, so POD is small by construction and PSS magnitudes are not comparable across thresholds — only the sign is, and the row-conditional storm-rate-versus-base-rate comparison is the readable one. If Phase 6 wants comparable PSS magnitudes it needs a balanced occasion design (e.g. matched sampling of non-pop anchors), declared in advance. |
 | Q26 | The 1.0-inch storm threshold detects far fewer storms per winter than a Wasatch winter plausibly contains | Open — raised in Phase 5a | Phase 5a's detector validation (4a) counted storm events per winter across the declared thresholds on the 16 exploration winters. Against the ~15–30 meaningful storms a Wasatch winter roughly contains: **0.5 in** gives `any2` 15.4 events/winter (min 12, max 19) and `mean` 13.5 — plausible. **1.0 in** gives `any2` 6.9 (min 2, max 13) and `mean` 4.7; **1.5 in** gives `any2` 2.3 and `mean` 1.4 — both implausibly few, and flagged in the report rather than silently fixed. The eyeball check (4b) shows the same thing from the other side: at 1.0 in every mark lands on a real step-up in the 2016 SWE curve, but a clear multi-day accumulation in early February 2017 (roughly 22.4 → 25.2 in over about a week, at 0.4–0.75 in/day) carries no mark at all, because no single day reached 1 inch at two stations. The threshold is not detecting a storm; it is detecting a storm's biggest single day. This is not a bug in `detect_events` — the independent precipitation cross-check (4c) put SWE-detected storms at 111 of 111 coincident with gauge precipitation, so what the detector finds is real weather. It is a definitional problem with what "a storm day" means. Two things follow for Phase 6 (Q6): 0.5 in has the better claim to being the storm definition, and a threshold on a *multi-day* accumulation rather than a single day's gain would match the physical event better than any single-day threshold does. Not acted on in Phase 5a — out of scope, and changing the threshold after seeing results would be exactly the fishing rule 2.2 forbids. |
+| Q27 | Would a different swell variable track the MJO better than daily mean wave height? | Open — raised in Phase 5b | Link A (F4) tested exactly one variable: `buoy_51001_wvht_mean`, a single day's mean significant wave height. It came out at 0.18 sd — right direction, too weak to use. That is a result about *that variable*, not about the buoy in general. Untested and plausible alternatives: long-period swell only (DPD/MWD filtering — this is Q8, and SPEC 3.1 argues a long-period NW swell is the actual signature of a distant North Pacific storm while short-period swell is local chop); a multi-day swell aggregate rather than a single day, since MJO state persists for weeks and a daily value is mostly noise around it; or 51101 over its shorter record. Any of these could plausibly move 0.18 sd upward. **This must not be run as a search.** Testing variables until one clears the bar is the multiple-comparisons trap the seal exists to prevent (rule 2.3), and Q18 is resolved on the variable that was declared. If Phase 6 wants a different swell variable it should pick one on physical grounds, declare it, and accept the result. |
+| Q28 | Phase 6 must declare the MJO lag/window by rule, not by scan | Open — raised in Phase 5b | Phase 5b ran Link B at exactly two framings, same-day (0–0) and lagged (1–14), **both declared before the run** specifically so that no framing could be chosen after seeing which flattered the result. That was the right discipline for a mechanism check, but it means the MJO's own best lag into the Wasatch is genuinely unknown here — 1–14 days is a reasonable reading of the subseasonal literature, not a measured optimum for this record. If the Phase 6 protocol scores anything on MJO state it must fix the window **by a rule declared in advance** (e.g. "the subseasonal 1–14 day window as used in the literature"), exactly as Q16 requires for the pop threshold. A lag scan over MJO framings would carry the same multiple-comparisons hazard that made the buoy lag scan (F3) uninterpretable without the seal, and would burn exploration freedom for very little. |
+| Q29 | Is amplitude > 1.0 the right coherence bar, and what is lost by excluding a third of the sample? | Open — raised in Phase 5b | The declared test follows the standard convention that amplitude below 1.0 means "no coherent MJO" (SPEC 3.3). Measured cost on the exploration winters: **942 of 2,900 winter days (32.5%) are excluded** by that condition alone — far more than either the buoy gap or the MJO record's end costs this project. Those days are not missing data; they are days with a real but weak MJO, dropped by a convention. Two things for Phase 6 if it uses MJO features (models B and D, SPEC Section 7): a model does not need the binary phase-group frame at all — it can take RMM1/RMM2 or amplitude as continuous inputs and use every day — and if a threshold *is* used, whether it is 1.0 must be declared rather than inherited. Not varied in 5b: sweeping the amplitude bar to see which value looks best is precisely the fishing rule 2.2 forbids. |
 
 ---
 
@@ -60,6 +63,135 @@ A finding produced under a protocol adjusted after the result was seen is EXPLOR
 and may not be reported as a conclusion (SPEC rule 2.3).
 
 ---
+
+### Descriptive-sweep observations (Phase 5b, Session 5b) — **NOT FINDINGS**
+
+This block is deliberately outside the numbered findings and must never be cited as one.
+Phase 5b looked at all 8 MJO phases individually as *description*, alongside its declared
+2-group test. The declared test (F4, F5) is confirmatory and carries weight because it was
+fixed in advance. **Nothing below was pre-specified, nothing below is a test, and nothing
+below may be promoted to a finding or a conclusion.** Anything here that looks like a
+pattern would need a fresh out-of-sample test to mean anything at all, and this project has
+exactly one such test left to spend (rule 2.3). Recorded only so the picture is on record.
+
+- **Link A, swell per phase (amplitude > 1).** Per-phase means span 2.666 m (phase 2) to
+  3.015 m (phase 8), a spread of 0.349 m ≈ 0.39 sd, around an all-day mean of 2.862 m. The
+  picture is close to flat, and a flat picture across all 8 phases is the honest support for
+  the declared test's weak result — not a separate result of its own.
+- **Link B, storm rate per phase (amplitude > 1, lagged 1–14).** Rates span 0.3022
+  (phase 3) to 0.5078 (phase 1) against a base rate of 0.4525; 3 of 8 phases sit above the
+  base rate. Two of the phases sitting highest are **transitional phases (1 and 5),
+  excluded from the declared contrast by design** — which is a reminder of exactly why
+  single-phase readings at n ≈ 130–280 autocorrelated days are not interpretable.
+- **The rule that was not broken:** no observation in this block appears in F4, F5, F6, in
+  `STATUS.md`, or in `outputs/phase5b_mjo_report.txt` as a finding. The sweep generated the
+  picture; only the declared test answered a question.
+
+---
+
+### F6 — The chain read: Link A is where the folklore breaks (Phase 5b, Session 5b, 2026-08-09)
+
+- **Hypothesis.** Phase 5a falsified the folklore as stated (swell → snow at ~14 days).
+  This asks *why*, by testing the two internal links of the chain the folklore skips
+  (SPEC 1.3): MJO → swell (Link A) and MJO → snow (Link B). The pattern across the two is
+  the finding, not either one alone.
+- **Method.** F4 and F5, read together against the branching logic fixed in the session
+  prompt before either was run. Link A's verdict comes from the declared effect-size bar
+  (0.2 sd), Link B's from the declared rate-ratio bar (1.10) at the lagged primary framing,
+  with all four Link B cells reported as the robustness check.
+- **Result, with its baseline.** Link A **0.18 sd** (bar 0.2). Link B lagged **ratio 1.133**
+  (bar 1.10), against a base rate of 0.4525 — clearing its bar, but failing it at the
+  0.5-inch sensitivity threshold (ratio 1.002). **Link A is weaker than Link B in every
+  framing tested.**
+- **Implication.** **Link A is the break.** The buoy does not track the MJO closely enough
+  to be read as a proxy for it, so the folklore fails at its first step and everything
+  downstream is moot. Two qualifications belong with that, not after it. First, the Link A
+  difference is *in the hypothesised direction* — swell genuinely is higher in phases 6–8 —
+  so the physical story in SPEC 1.3 is not refuted; the buoy is simply far too weak an
+  instrument for reading it, which is a different and more interesting result than "the
+  mechanism is wrong". Second, Link B is the weaker half of the claim and must not be
+  over-read: it clears its bar on the primary storm definition and fails on the definition
+  Q26 says has the better claim to being "a Wasatch storm". So the honest statement is
+  "the MJO→snow link is present at best weakly in this record", not "it is established
+  here". Under either reading of Link B, Link A is still the break.
+  **Caveats, stated not buried:** (1) **Sample** — 16 exploration winters; the declared
+  contrast rests on 736 favourable / 767 unfavourable days for Link A and 694 / 740 for
+  Link B lagged, and those days are not independent observations (winter weather is
+  autocorrelated and MJO phases persist for days), so the effective sample is much smaller
+  than the counts suggest. A weak or absent link here does **not** overturn the published
+  MJO/western-US literature — it says the signal is not clearly visible at this scale
+  (Q17). (2) **Coverage** — checked rather than assumed, and the assumption was wrong in
+  this direction: neither the MJO record's 2024-02-24 end nor 51001's 2010–2014 hole costs
+  this session any days, because the exploration winters end 2021-04-30 and the gap winters
+  were never in the split. What shrinks the sample is the declared test's own amplitude
+  condition — 942 of 2,900 winter days have amplitude ≤ 1.0 and are excluded.
+- **Status.** **EXPLORATORY.** Exploration winters only, protocol not yet locked
+  (rule 2.3). Not a conclusion.
+
+### F5 — Link B: MJO phase relates to Wasatch storms only weakly, and not robustly (Phase 5b, Session 5b, 2026-08-09)
+
+- **Hypothesis.** Declared before the run: Wasatch storms are more common on
+  favourable-phase days (MJO 6/7/8, amplitude > 1) than on unfavourable-phase days
+  (2/3/4, amplitude > 1). Grounded in the published western-US precipitation literature.
+- **Method.** Storm events reuse the Phase 5a detector unchanged (`detect_events`, 1.0-inch
+  `any2` primary, 0.5-inch `any2` as the Q26 sensitivity check). The occasion is a day;
+  the outcome is "a storm event *begins* in the window". Two framings, **both declared in
+  advance** because the MJO's influence is lagged: same-day (window 0–0) and lagged
+  (window 1–14 days). No one-to-one claiming — nothing is being issued as a forecast — and
+  both rows are treated identically, so these numbers are comparable to each other but not
+  to Phase 5a's pop tables (Q25). 16 exploration winters.
+- **Result, with its baseline.** All four declared cells, favourable vs unfavourable vs
+  base rate:
+
+  | storm def | window | favourable | unfavourable | base rate | ratio | PSS | days (fav/unfav) |
+  | --- | --- | --- | --- | --- | --- | --- | --- |
+  | 1.0 in `any2` | 0–0 | 0.0417 | 0.0277 | 0.0383 | **1.506** | +0.1051 | 743 / 794 |
+  | 1.0 in `any2` | 1–14 | 0.4164 | 0.3676 | 0.4525 | **1.133** | +0.0512 | 694 / 740 |
+  | 0.5 in `any2` | 0–0 | 0.0754 | 0.0894 | 0.0848 | **0.843** | −0.0463 | 743 / 794 |
+  | 0.5 in `any2` | 1–14 | 0.7680 | 0.7662 | 0.7922 | **1.002** | +0.0025 | 694 / 740 |
+
+  111 storm events at 1.0 in, 246 at 0.5 in. Against the declared bar (ratio ≥ 1.10),
+  Link B holds in **2 of the 4 cells** — both of them the 1.0-inch cells.
+- **Implication.** Link B is present at the primary storm definition and vanishes at the
+  sensitivity one, so it is **not robust**, and the direction of that failure matters:
+  Q26 established that 0.5 in has the *better* claim to being "a Wasatch storm" (15.4
+  events per winter, inside the plausible band) while 1.0 in under-counts at 6.9. The cell
+  where Link B looks strongest is the cell built on the weaker storm definition, so the
+  result must be read as the whole row, not its best entry. Note also that the eye-catching
+  same-day ratio of 1.506 rests on **31 versus 22 storm-start days** — a difference of 9
+  events — and carries no weight at that count. Phase 6 should not treat "the MJO is
+  established as a Wasatch storm predictor in this record" as an available premise.
+- **Status.** **EXPLORATORY.** Exploration winters only, protocol not yet locked
+  (rule 2.3). Not a conclusion.
+
+### F4 — Link A: buoy swell tracks the MJO in the right direction, too weakly to be a proxy (Phase 5b, Session 5b, 2026-08-09; resolves Q18)
+
+- **Hypothesis.** Declared before the run: wave height at 51001 is higher on
+  favourable-phase days (MJO 6/7/8, amplitude > 1) than on unfavourable-phase days
+  (2/3/4, amplitude > 1). This is the premise the entire "is the buoy just a crude MJO
+  index?" framing rests on (SPEC 1.3, Section 7 model D) — plausible but, until now,
+  unchecked (Q18).
+- **Method.** `analysis_daily`, exploration winters only, days carrying both a coherent
+  MJO (phase and amplitude present, amplitude > 1.0) and a defined
+  `buoy_51001_wvht_mean`. Distributions compared on mean, median, and the difference in
+  means as a fraction of the pooled sd. Phases 1 and 5 excluded as transitional. The 0.2 /
+  0.5 sd reading bars were fixed in the module before the run, and were not moved after it.
+- **Result, with its baseline.** Favourable: **mean 2.9798 m, median 2.8023 m, n = 736
+  days.** Unfavourable: **mean 2.8204 m, median 2.7225 m, n = 767 days.** Difference in
+  means **+0.1594 m**; pooled sd 0.8931 m; **effect size +0.1785 sd** — in the hypothesised
+  direction but below the declared 0.2 sd "present" bar. Reference: the all-day mean over
+  2,840 defined winter days is 2.8624 m, so the favourable group sits 0.117 m above the
+  all-day mean and the unfavourable group 0.042 m below it. Overlap: **1,911 of 2,900**
+  exploration winter days carry both a coherent MJO and a reporting buoy.
+- **Implication.** **Resolves Q18.** The relationship exists and points the right way, and
+  it is far too weak to make wave height a usable read on MJO state — a difference of 16 cm
+  against a within-group spread of 89 cm is invisible on any given day. The buoy is a very
+  crude MJO index indeed. This is a clean reason the folklore fails at step one, and it
+  reframes SPEC Section 7's model D: the buoy's MJO content is small enough that C-vs-D
+  separation was always going to be hard, independent of sample size (Q17). It does not
+  refute SPEC 1.3's physical story — the sign is right — only its usefulness.
+- **Status.** **EXPLORATORY.** Exploration winters only, protocol not yet locked
+  (rule 2.3). Not a conclusion.
 
 ### F3 — Lag scan 0–30 days: no coherent band of positive skill (Phase 5a, Session 5a, 2026-08-09)
 

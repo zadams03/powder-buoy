@@ -1,9 +1,10 @@
 # SPEC.md — Powder Buoy
 
-**Version: 0.6**
-**Status: Phases 0–4 complete, and Phase 5 Stages 1–2 (counting) run on the exploration
-winters (Session 5a). Held-out set SEALED and untouched. Stage 3 (modelling) is GATED —
-it runs only if the joint gate review judges Stages 1–2 to warrant it.**
+**Version: 0.7**
+**Status: Phases 0–4 complete; Phase 5 Stages 1–2 (counting) run on the exploration
+winters (Session 5a); and the MJO mechanism check run on the same winters (Session 5b).
+Held-out set SEALED and untouched. Stage 3 (modelling) is GATED — it runs only if the
+joint gate review judges Stages 1–2 to warrant it, and the gate has not opened.**
 
 This file is the stable specification. It describes what the project is, what data it
 uses, how it must be built, and how it will be judged. It changes rarely.
@@ -29,7 +30,7 @@ stated here deliberately so that no later session feels pressure to find a signa
 
 ### 1.1 Background — the folklore
 
-Since roughly 2004, a community of Utah skiers has tracked NOAA buoy 51101, a
+Since the mid-2000s, a community of Utah skiers has tracked NOAA buoy 51101, a
 3-metre discus buoy a few hundred kilometres northwest of Kauai. The rule they use is:
 
 > When wave height spikes ("a buoy pop"), the Wasatch mountains get a storm about two
@@ -37,6 +38,13 @@ Since roughly 2004, a community of Utah skiers has tracked NOAA buoy 51101, a
 
 Claimed accuracy is around 80%, self-reported, over small samples, with no baseline
 quoted. No published study of the claim exists.
+
+**Caveat on the buoy the folklore names (added 0.7).** 51101's archive begins 2008-02-21
+(Section 3.1), so it did not exist for most of this study's exploration winters — 10 of
+the 16 (1989–2003) predate it entirely. For those winters the pop signal necessarily
+comes from 51001, validated as a stand-in by the 0.98 cross-buoy correlation where the
+two overlap (`DECISIONS.md` Q1, Q21). The date above is deliberately vague because the
+community's own start date is not documented; what is documented is when the data begins.
 
 ### 1.2 Why the folklore mechanism cannot be right as stated
 
@@ -580,20 +588,35 @@ Build the 2×2 table at the folklore lag:
 | Buoy popped | a | b |
 | Buoy did not pop | c | d |
 
+The unit being counted is an **occasion** — one anchor day, asking whether a storm
+occurs in the window that follows it. The four cells count occasions, not storms, and
+the glosses below are written in those terms (tightened in 0.7; the formulas are
+unchanged). One storm can fall inside the windows of many overlapping occasions, and a
+storm falling inside no window is counted by none of them.
+
 Two rates matter, and they must not be confused:
 
-- **Probability of detection (POD)** = `a/(a+c)` — of all storms, how many followed a
-  pop. This is the "hit rate" in the forecast-verification sense.
-- **False alarm rate (POFD)** = `b/(b+d)` — of all non-storm outcomes, how many were
-  preceded by a pop, i.e. false alarms.
+- **Probability of detection (POD)** = `a/(a+c)` — of all storm-containing occasions,
+  the fraction that followed a pop. This is the "hit rate" in the forecast-verification
+  sense.
+- **False alarm rate (POFD)** = `b/(b+d)` — of all storm-free occasions, the fraction
+  that followed a pop, i.e. false alarms.
 
 Also report, next to each other and always (rule 2.2):
 
-- **Storm rate given a pop** = `a/(a+b)` — how often a pop is actually followed by a
-  storm.
-- **Base rate** = `(a+c)/(a+b+c+d)` — how often a storm happens at all.
+- **Storm rate given a pop** = `a/(a+b)` — of all pop occasions, the fraction actually
+  followed by a storm.
+- **Base rate** = `(a+c)/(a+b+c+d)` — the fraction of all occasions that contain a storm
+  in their window, with no prediction involved.
 
 The buoy has skill only if the storm rate given a pop clearly exceeds the base rate.
+
+**How the "did not pop" comparison occasions are drawn is not specified here**, and it is
+the single most consequential choice in the table. Phase 5a had to construct it to make
+these formulas computable; that construction — the anchor-day occasion, one-to-one
+claiming on the pop row, and what it does to PSS magnitudes — is recorded in
+`DECISIONS.md` Q25 and is **settled in the Phase 6 protocol (Section 8)**, which must
+adopt or replace it deliberately rather than inherit it.
 
 Score with the Peirce skill score, also called the Hanssen–Kuipers discriminant:
 
