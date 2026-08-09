@@ -1,9 +1,9 @@
 # SPEC.md — Powder Buoy
 
-**Version: 0.5**
-**Status: Phases 0–4 complete — repo scaffold, NDBC ingest, SNOTEL ingest, climate index
-ingest, `analysis_daily`, and the season split all built (Session 0D). Held-out set
-SEALED. Next is Phase 5, exploration.**
+**Version: 0.6**
+**Status: Phases 0–4 complete, and Phase 5 Stages 1–2 (counting) run on the exploration
+winters (Session 5a). Held-out set SEALED and untouched. Stage 3 (modelling) is GATED —
+it runs only if the joint gate review judges Stages 1–2 to warrant it.**
 
 This file is the stable specification. It describes what the project is, what data it
 uses, how it must be built, and how it will be judged. It changes rarely.
@@ -554,6 +554,16 @@ separate the models at all. If we land here, that is a decision point, not an au
 continue: either accept weaker conclusions and say so plainly, or pause and reconsider
 scope. Recorded so the decision is faced, not stumbled into.
 
+**The decision point was reached, and was resolved by the Phase 4 split.** Neither of the
+two failure modes above is what materialised: the two buoys correlate at 0.98, and
+whether 51001 was repositioned could not be checked from the stdmet archive at all
+(`DECISIONS.md` Q2, still open, low priority). What Session 0A found instead was a third
+thing — a 2010–2014 hole in 51001's archive — and requiring MJO coverage on top of it
+left 22 usable winters, inside Plan B's range. Phase 4 took the first branch knowingly: proceed with a two-era record and a
+six-winter held-out set, accepting weaker conclusions and stating them plainly, rather
+than pausing to reconsider scope (`DECISIONS.md` Q13, Q21). The risk description above
+is kept for future readers; it is no longer an open question.
+
 ### 6.1 Order of work inside Phase 5 — counting before modelling
 
 Machine learning is not the default tool here. It is the last one.
@@ -785,9 +795,12 @@ Recorded so that no session drifts into these.
 
 - **Dashboard or web app.** Decided after Phase 7. Only worth building if the answer is
   interesting. A dashboard that displays "this does not work" is not worth the time.
-- **Neural networks.** Not justified at the data volume available here — at most around
-  40 winters, confirmed in Session 0A — and interpretability matters more than raw fit.
-  Would need a specific argument to revisit.
+- **Neural networks.** Not justified at the data volume available here, and
+  interpretability matters more than raw fit. Session 0A measured the record as two eras
+  either side of the 2010–2014 buoy gap rather than one unbroken ~40-winter span, and
+  once MJO coverage is required for the four-model comparison only 22 winters are usable
+  (Section 7; `DECISIONS.md` Q13/Q21) — an order of magnitude short of what a neural
+  network would need. Would take a specific argument to revisit.
 
 ---
 
