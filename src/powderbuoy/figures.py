@@ -1,10 +1,16 @@
-"""Phase 8c — the hypothesis, drawn: buoy pops and their 10-18 day windows over the SWE curve.
+"""Presentation figures: the folklore's claim drawn, so a reader can see it hit or miss.
 
-**Presentation only.** This module runs no analysis, computes no rate, skill score or
-verdict, and produces no finding. It draws data that already exists so that a reader can
-see the folklore's claim succeed or fail by eye: each buoy pop, the nine-day window in
-which the folklore says a storm should begin, and the snowpack curve those windows are
-claims about.
+**Presentation only.** Nothing here runs a statistical test, computes a skill score or a
+verdict, or produces a finding. It draws data that already exists. Two figures live here:
+
+- **Phase 8c, `--figure hypothesis-grid`.** Each buoy pop, the nine-day window in which the
+  folklore says a storm should begin, and the snowpack curve those windows are claims
+  about, over four exploration winters.
+- **Phase 8d, `--figure per-day`.** The probability that a storm *begins* on each individual
+  day after a pop, lags 0 to 30, against the matching per-day baseline. This is the direct
+  per-day view of the same claim: the project's lag scan is a *windowed* skill score, and a
+  window can smear a sharp, narrowly-timed signal by averaging its target days with
+  neighbours that carry none. Descriptive counting only, with the denominators reported.
 
 Two disciplines carry over from the rest of the project and are enforced here:
 
@@ -19,8 +25,8 @@ Two disciplines carry over from the rest of the project and are enforced here:
   figure draws the rule that was actually tested, and cannot drift from it. Nothing in
   this module calls `load_holdout_frame` or passes `include_holdout=True`.
 
-The four winters are chosen by a rule declared here — two per climate era, the most
-data-complete in each — never by how well or badly the pops line up with the storms.
+The four winters of the grid are chosen by a rule declared here (two per climate era, the
+most data-complete in each), never by how well or badly the pops line up with the storms.
 """
 
 from __future__ import annotations
@@ -378,31 +384,339 @@ def plot_hypothesis_grid(panels: list[dict], out_path) -> None:
 
 
 # --------------------------------------------------------------------------
-# Entry point
+# Phase 8d: per-day storm-onset probability after a pop
+# --------------------------------------------------------------------------
+
+# The reader's question: not "did a storm begin anywhere in the 10 to 18 day window",
+# but "how likely is a storm to begin on each individual day after a pop". Counting only.
+PER_DAY_MAX_LAG = 30
+SMOOTHING_DAYS = 3
+# The range the folklore is usually quoted at. Marked on the figure so a reader can look
+# exactly where a bump is predicted. Nothing in the data privileges it.
+CITED_LAG_LO = 12
+CITED_LAG_HI = 14
+
+PER_DAY_FIGURE_NAME = "per_day_storm_onset_after_pop.png"
+PER_DAY_NOTE_NAME = "phase8d_per_day_onset_note.txt"
+
+COLOR_BASELINE = "#c00000"
+COLOR_SMOOTH = "#1f4e79"
+
+NANOS_PER_DAY = 86_400_000_000_000
+
+
+def storm_onset_days(df: pd.DataFrame, gain_columns: dict[str, str]) -> pd.DatetimeIndex:
+    """First days of storm events at the locked definition, over the whole frame.
+
+    "A storm begins on day D" means a storm event's first day is D. Events come from the
+    existing tested `detect_events`; a multi-day storm has exactly one onset day, so a
+    long storm cannot contribute to several lags at once.
+    """
+    storm_flags = build_storm_flags(df, gain_columns, STORM_THRESHOLD_IN)[STORM_COMBINATION]
+    events = detect_events(storm_flags, bridge=BRIDGE_DAYS)
+    return pd.DatetimeIndex(events["event_start"] if len(events) else []).sort_values()
+
+
+def pop_and_nonpop_anchors(
+    df: pd.DataFrame, wvht_column: str
+) -> tuple[pd.DatetimeIndex, pd.DatetimeIndex]:
+    """The two sets of anchor days, built the way the study's occasions are built (Q25).
+
+    Pop anchors are pop-event first days, one per event, so a five-day swell is one
+    forecast rather than five. Non-pop anchors are every other day lying outside every pop
+    event and carrying a defined pop flag; a day the buoy did not report is on neither
+    side and is never read as "no pop" (rule 2.5). Days inside a pop event after its first
+    day belong to neither set, exactly as in `contingency_from_flags`.
+    """
+    pop_flags = build_locked_pop_flags(df, wvht_column)
+    dates = pd.DatetimeIndex(pop_flags.index)
+    events = detect_events(pop_flags, bridge=BRIDGE_DAYS)
+
+    inside_pop = np.zeros(len(dates), dtype=bool)
+    values = dates.to_numpy()
+    for start, end in zip(events.get("event_start", []), events.get("event_end", [])):
+        inside_pop |= (values >= np.datetime64(start)) & (values <= np.datetime64(end))
+
+    defined = pop_flags.notna().to_numpy()
+    pop_anchors = pd.DatetimeIndex(
+        events["event_start"] if len(events) else []
+    ).sort_values()
+    nonpop_anchors = dates[defined & ~inside_pop]
+    return pop_anchors, nonpop_anchors
+
+
+def winter_end_lookup(df: pd.DataFrame) -> pd.Series:
+    """The last in-season date of each anchor's own winter, indexed by date.
+
+    A pop late in April cannot look 30 days ahead into May: the season is 1 Nov to 30 Apr
+    (SPEC 8.2) and days outside it are not in the frame at all. Lags that would run past
+    the winter's last day are dropped from that lag's denominator rather than counted as
+    "no storm", which would manufacture zeros at long lags.
+    """
+    ends = df.groupby("winter")["date"].transform("max")
+    return pd.Series(pd.DatetimeIndex(ends).to_numpy(), index=pd.DatetimeIndex(df["date"]))
+
+
+def per_day_onset_curve(
+    anchors: pd.DatetimeIndex,
+    winter_end: pd.Series,
+    onset_days: pd.DatetimeIndex,
+    max_lag: int = PER_DAY_MAX_LAG,
+) -> pd.DataFrame:
+    """For each lag L: the fraction of anchors whose day + L is a storm-event first day.
+
+    The denominator at each L counts only anchors for which day L is still inside the same
+    winter, so it shrinks towards the long lags and at the season edges. It is returned
+    with the probability, never hidden: at 30 days out, each point rests on fewer anchors
+    than at 0, and the tail is correspondingly noisier.
+    """
+    anchor_ns = pd.DatetimeIndex(anchors).as_unit("ns").astype("int64").to_numpy()
+    end_ns = (
+        pd.DatetimeIndex(winter_end.loc[anchors].to_numpy())
+        .as_unit("ns")
+        .astype("int64")
+        .to_numpy()
+    )
+    onset_ns = pd.DatetimeIndex(onset_days).as_unit("ns").astype("int64").to_numpy()
+
+    rows = []
+    for lag in range(max_lag + 1):
+        target = anchor_ns + lag * NANOS_PER_DAY
+        in_season = target <= end_ns
+        n_anchors = int(in_season.sum())
+        n_onsets = int(np.isin(target[in_season], onset_ns).sum())
+        rows.append(
+            {
+                "lag": lag,
+                "n_anchors": n_anchors,
+                "n_storm_onsets": n_onsets,
+                "probability": (n_onsets / n_anchors) if n_anchors else np.nan,
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def smooth_curve(probabilities: pd.Series, window: int = SMOOTHING_DAYS) -> pd.Series:
+    """A centred rolling mean, shown ALONGSIDE the raw line and never instead of it.
+
+    The end points average the days that exist rather than going blank, so lag 0 and lag
+    30 are the mean of two days rather than three. Only the pop line is smoothed; the
+    baseline is left exactly as it comes out.
+    """
+    return probabilities.rolling(window, center=True, min_periods=1).mean()
+
+
+def plot_per_day_onset(
+    pop_curve: pd.DataFrame, base_curve: pd.DataFrame, caption: str, out_path
+) -> None:
+    """The per-day view: pop line raw and smoothed, the per-day baseline, denominators."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    fig = plt.figure(figsize=(12, 7.6))
+    grid = fig.add_gridspec(
+        2, 1, height_ratios=[3.4, 1.0], hspace=0.10,
+        left=0.085, right=0.985, top=0.905, bottom=0.30,
+    )
+    ax = fig.add_subplot(grid[0])
+    ax_n = fig.add_subplot(grid[1], sharex=ax)
+
+    ax.axvspan(
+        CITED_LAG_LO, CITED_LAG_HI, color=COLOR_STORM, alpha=0.18, lw=0,
+        label=f"the folklore's cited {CITED_LAG_LO} to {CITED_LAG_HI} day range",
+    )
+    ax.plot(
+        pop_curve["lag"], pop_curve["probability"], "-o", ms=3.4, lw=1.0,
+        color=COLOR_POP, alpha=0.75, label="after a pop, raw per day",
+    )
+    ax.plot(
+        pop_curve["lag"], smooth_curve(pop_curve["probability"]), "-", lw=2.2,
+        color=COLOR_SMOOTH, label=f"after a pop, {SMOOTHING_DAYS} day centred mean",
+    )
+    ax.plot(
+        base_curve["lag"], base_curve["probability"], "--", lw=1.8,
+        color=COLOR_BASELINE, label="baseline: after a non-pop day, raw per day",
+    )
+
+    ax.set_ylabel("probability a storm begins on that day", fontsize=10)
+    # Headroom so the tallest raw point is not clipped by the axes edge, and so the
+    # legend does not sit on top of it.
+    highest = float(max(pop_curve["probability"].max(), base_curve["probability"].max()))
+    ax.set_ylim(0.0, highest * 1.35)
+    ax.set_xlim(0, PER_DAY_MAX_LAG)
+    ax.grid(alpha=0.25)
+    ax.legend(fontsize=9, loc="upper right", framealpha=0.9)
+    ax.tick_params(labelbottom=False, labelsize=9)
+    ax.set_title(
+        "Probability a storm begins on each day after a buoy pop, exploration winters "
+        "(EXPLORATORY)",
+        fontsize=12,
+    )
+
+    ax_n.bar(pop_curve["lag"], pop_curve["n_anchors"], width=0.75, color=COLOR_POP, alpha=0.55)
+    ax_n.set_ylim(0, float(pop_curve["n_anchors"].max()) * 1.30)
+    ax_n.set_ylabel("pops behind\neach point", fontsize=8.5)
+    ax_n.set_xlabel(
+        "lag: days after the pop event's first day (each point is that single day, not a "
+        "window)",
+        fontsize=10,
+    )
+    ax_n.set_xticks(range(0, PER_DAY_MAX_LAG + 1, 2))
+    ax_n.grid(alpha=0.25, axis="y")
+    ax_n.tick_params(labelsize=9)
+
+    fig.text(
+        0.012, 0.012,
+        "\n".join(textwrap.fill(p, width=150) for p in caption.split("\n")),
+        fontsize=8.2, color="#333333", va="bottom", ha="left",
+    )
+    fig.savefig(out_path, dpi=160)
+    plt.close(fig)
+
+
+def per_day_caption(pop_curve: pd.DataFrame, base_curve: pd.DataFrame) -> str:
+    """The caption, with the figure's own numbers filled in. No em dashes anywhere.
+
+    Everything quantitative in it is read off the two curves rather than typed in, so the
+    caption cannot drift from the figure, and the awkward detail is stated rather than
+    smoothed over: the smoothed line's own maximum is located and reported wherever it
+    falls, including inside the cited range.
+    """
+    smoothed = smooth_curve(pop_curve["probability"])
+    peak_lag = int(pop_curve.loc[smoothed.idxmax(), "lag"])
+    peak_value = float(smoothed.max())
+    peak_base = float(base_curve.loc[base_curve["lag"] == peak_lag, "probability"].iloc[0])
+    low_lag = int(pop_curve.loc[pop_curve["probability"].idxmin(), "lag"])
+    low_value = float(pop_curve["probability"].min())
+    cited = pop_curve[pop_curve["lag"].between(CITED_LAG_LO, CITED_LAG_HI)]
+    cited_base = base_curve[base_curve["lag"].between(CITED_LAG_LO, CITED_LAG_HI)]
+    return (
+        "Probability that a storm begins on each day after a buoy pop, out to 30 days, on "
+        "the exploration winters, against the per day baseline (the background chance a "
+        "storm begins that many days after any non-pop day). The folklore predicts a bump "
+        f"around {CITED_LAG_LO} to {CITED_LAG_HI} days, shaded. The pop line stays close to "
+        "the baseline across the whole range and the cited range is no exception: it "
+        f"averages {cited['probability'].mean():.4f} there against a baseline of "
+        f"{cited_base['probability'].mean():.4f}, that is, below the background rather than "
+        f"above it. Stated plainly because it is visible: the smoothed line's own highest "
+        f"point does fall at lag {peak_lag}, at {peak_value:.4f} against a baseline of "
+        f"{peak_base:.4f}, but it is a single point about one percentage point above the "
+        f"background, it sits beside lag {low_lag}, which carries the lowest raw value in "
+        f"the entire range at {low_value:.4f}, and the neighbouring days do not rise with "
+        "it. That is a wiggle, not a bump. Isolated single day wiggles are expected here "
+        f"because each point rests on only tens of pop events "
+        f"({int(pop_curve['n_anchors'].min())} to {int(pop_curve['n_anchors'].max())} across "
+        "the lags, shown beneath), each carrying a handful of storm onsets.\n"
+        f"Locked definitions (SPEC 8.2): pop = daily mean wave height at buoy 51001 >= "
+        f"{POP_THRESHOLD_M:.4f} m; storm = SWE gain >= {STORM_THRESHOLD_IN:g} in at >= 2 "
+        f"reporting SNOTEL stations ({STORM_COMBINATION}); both collapsed into events by "
+        f"detect_events, bridge = {BRIDGE_DAYS} day, dated by first day, so a multi day "
+        "storm has one onset. Anchors whose day L would fall past 30 April are dropped from "
+        "that lag rather than counted as no storm.\n"
+        "A true signal would show a broad rise above the baseline sustained across several "
+        "adjacent days near the cited lag, not a lone spike. This is a descriptive "
+        "visualisation, not a test, and adds no finding: the study's answer remains F7. "
+        "Exploration winters only, EXPLORATORY."
+    )
+
+
+def build_per_day_note(
+    winters: list[int],
+    wvht_column: str,
+    pop_curve: pd.DataFrame,
+    base_curve: pd.DataFrame,
+    caption: str,
+    figure_path,
+) -> str:
+    """The report note: the per lag table, its denominators, and the caption. No em dashes."""
+    table = pop_curve.merge(base_curve, on="lag", suffixes=("_pop", "_base"))
+    table["pop_smoothed"] = smooth_curve(pop_curve["probability"]).to_numpy()
+    table = table[
+        ["lag", "n_anchors_pop", "n_storm_onsets_pop", "probability_pop", "pop_smoothed",
+         "n_anchors_base", "n_storm_onsets_base", "probability_base"]
+    ]
+
+    out: list[str] = []
+    out.append("PHASE 8d, PER DAY STORM ONSET PROBABILITY AFTER A POP")
+    out.append("=" * 78)
+    out.append("")
+    out.append(
+        "PRESENTATION ONLY. This note records what one figure draws. No statistical test "
+        "was run, no skill score or verdict was computed, no existing number changed, and "
+        "no finding was added. The study's answer remains F7 (SPEC 8.4, DECISIONS.md)."
+    )
+    out.append("")
+    out.append(
+        "Why the figure exists: the project's lag scan (F3) is a WINDOWED skill score, and "
+        "a window can smear a sharp, narrowly timed signal by averaging its target days "
+        "with neighbours that carry none. This is the direct per day view of the same "
+        "claim, asked for by a reader. Either outcome would have been useful; the check is "
+        "made directly rather than argued from the windowed result."
+    )
+    out.append("")
+    out.append(f"Exploration winters used ({len(winters)}): {winters}")
+    out.append(
+        "  include_holdout was never set True. The six held-out winters (2004, 2005, 2006, "
+        "2008, 2021, 2022) were not loaded, plotted or counted (rule 2.3)."
+    )
+    out.append(f"  Predictor column: {wvht_column}")
+    out.append("")
+    out.append("DEFINITIONS, imported from the locked rule and not re-chosen (SPEC 8.2)")
+    out.append(f"  pop day    : {wvht_column} >= {POP_THRESHOLD_M:.4f} m (fixed metre value)")
+    out.append(
+        f"  storm day  : swe_gain_in >= {STORM_THRESHOLD_IN:g} in at >= 2 reporting "
+        f"stations ({STORM_COMBINATION})"
+    )
+    out.append(f"  events     : detect_events, bridge = {BRIDGE_DAYS} day, dated by first day")
+    out.append(
+        f"  storm onset: the first day of a storm event, so a multi day storm has exactly "
+        "one onset day and cannot contribute to several lags at once"
+    )
+    out.append(
+        "  anchors    : pop anchors are pop event first days; non pop anchors are every "
+        "other day outside every pop event with a defined pop flag (Q25, rule 2.5)"
+    )
+    out.append("")
+    out.append(
+        f"Anchors: {int(pop_curve.loc[0, 'n_anchors'])} pop events and "
+        f"{int(base_curve.loc[0, 'n_anchors'])} non pop days at lag 0. The denominator at "
+        "each lag counts only anchors whose day L is still inside the same winter, so it "
+        "shrinks towards the long lags and at the season edges."
+    )
+    out.append(
+        f"  Cross check against numbers already on record, not a new measurement: at lag "
+        f"{LAG_HI} the denominators are "
+        f"{int(pop_curve.loc[pop_curve['lag'] == LAG_HI, 'n_anchors'].iloc[0])} pops and "
+        f"{int(base_curve.loc[base_curve['lag'] == LAG_HI, 'n_anchors'].iloc[0])} non pop "
+        "days, which is the same in season condition the locked rule's window imposes. "
+        "Phase 5a recorded 142 usable pop occasions at this configuration (DECISIONS.md "
+        "Q16, F2) and F7 quotes 2263 exploration comparison occasions (c + d = 1438 + 825). "
+        "The two match, so the anchors here are the study's own occasions counted a "
+        "different way, not a different sample."
+    )
+    out.append("")
+    out.append("PER LAG TABLE. n_anchors is the denominator behind each probability.")
+    out.append(table.to_string(index=False, float_format=lambda v: "%.4f" % v))
+    out.append("")
+    out.append("CAPTION, as written onto the figure:")
+    out.append("")
+    for paragraph in caption.split("\n"):
+        out.append(textwrap.fill(paragraph, width=92, initial_indent="  ", subsequent_indent="  "))
+        out.append("")
+    out.append(f"Figure: {figure_path}")
+    return "\n".join(out)
+
+
+# --------------------------------------------------------------------------
+# Entry points
 # --------------------------------------------------------------------------
 
 
-def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(
-        description=(
-            "Phase 8c: draw the hypothesis — buoy pops with their 10-18 day windows over "
-            "the SWE curve, four exploration winters. Presentation only; no analysis."
-        )
-    )
-    parser.add_argument("--region", default="utah")
-    parser.add_argument("--seed", type=int, default=42)
-    args = parser.parse_args(argv)
-
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
-    np.random.seed(args.seed)
-
-    config = load_config(args.region)
-    figures_dir = config["paths"]["outputs"] / "figures"
-    figures_dir.mkdir(parents=True, exist_ok=True)
+def run_hypothesis_grid(df: pd.DataFrame, config: dict, figures_dir) -> None:
     gain_columns = snow_gain_columns(config)
     wvht_column = f"buoy_{config['buoys']['primary']}_wvht_mean"
-
-    df = load_exploration_frame(args.region)
     available = sorted(int(w) for w in df["winter"].unique())
     selected = select_winters(df, wvht_column)
     winters = [int(w) for w in selected["winter"]]
@@ -459,6 +773,73 @@ def main(argv: list[str] | None = None) -> None:
     plot_hypothesis_grid(panels, out_path)
     print(f"Figure saved: {out_path}")
     logger.info("Wrote %s", out_path)
+
+
+def run_per_day_onset(df: pd.DataFrame, config: dict, figures_dir) -> None:
+    """Phase 8d. Counting and drawing only; no test, no verdict, no finding."""
+    gain_columns = snow_gain_columns(config)
+    wvht_column = f"buoy_{config['buoys']['primary']}_wvht_mean"
+    winters = sorted(int(w) for w in df["winter"].unique())
+
+    onset_days = storm_onset_days(df, gain_columns)
+    pop_anchors, nonpop_anchors = pop_and_nonpop_anchors(df, wvht_column)
+    winter_end = winter_end_lookup(df)
+
+    pop_curve = per_day_onset_curve(pop_anchors, winter_end, onset_days)
+    base_curve = per_day_onset_curve(nonpop_anchors, winter_end, onset_days)
+
+    caption = per_day_caption(pop_curve, base_curve)
+    figure_path = figures_dir / PER_DAY_FIGURE_NAME
+    plot_per_day_onset(pop_curve, base_curve, caption, figure_path)
+
+    note = build_per_day_note(
+        winters, wvht_column, pop_curve, base_curve, caption, figure_path
+    )
+    print(note)
+    note_path = config["paths"]["outputs"] / PER_DAY_NOTE_NAME
+    note_path.write_text(note)
+    logger.info("Wrote %s", note_path)
+    logger.info("Wrote %s", figure_path)
+
+
+FIGURE_RUNNERS = {
+    "hypothesis-grid": run_hypothesis_grid,
+    "per-day": run_per_day_onset,
+}
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Presentation figures for the folklore claim. Presentation only: no analysis, "
+            "no test, no finding. Exploration winters only."
+        )
+    )
+    parser.add_argument("--region", default="utah")
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--figure",
+        choices=[*FIGURE_RUNNERS, "all"],
+        default="all",
+        help=(
+            "hypothesis-grid: pops and their 10-18 day windows over the SWE curve "
+            "(Phase 8c). per-day: per day storm onset probability after a pop, lags 0 to "
+            "30, against the per day baseline (Phase 8d)."
+        ),
+    )
+    args = parser.parse_args(argv)
+
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    np.random.seed(args.seed)
+
+    config = load_config(args.region)
+    figures_dir = config["paths"]["outputs"] / "figures"
+    figures_dir.mkdir(parents=True, exist_ok=True)
+
+    df = load_exploration_frame(args.region)
+    wanted = list(FIGURE_RUNNERS) if args.figure == "all" else [args.figure]
+    for name in wanted:
+        FIGURE_RUNNERS[name](df, config, figures_dir)
 
 
 if __name__ == "__main__":

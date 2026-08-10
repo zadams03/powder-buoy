@@ -1,0 +1,82 @@
+PHASE 8d, PER DAY STORM ONSET PROBABILITY AFTER A POP
+==============================================================================
+
+PRESENTATION ONLY. This note records what one figure draws. No statistical test was run, no skill score or verdict was computed, no existing number changed, and no finding was added. The study's answer remains F7 (SPEC 8.4, DECISIONS.md).
+
+Why the figure exists: the project's lag scan (F3) is a WINDOWED skill score, and a window can smear a sharp, narrowly timed signal by averaging its target days with neighbours that carry none. This is the direct per day view of the same claim, asked for by a reader. Either outcome would have been useful; the check is made directly rather than argued from the windowed result.
+
+Exploration winters used (16): [1989, 1990, 1992, 1994, 1996, 1998, 1999, 2000, 2001, 2003, 2015, 2016, 2017, 2018, 2019, 2020]
+  include_holdout was never set True. The six held-out winters (2004, 2005, 2006, 2008, 2021, 2022) were not loaded, plotted or counted (rule 2.3).
+  Predictor column: buoy_51001_wvht_mean
+
+DEFINITIONS, imported from the locked rule and not re-chosen (SPEC 8.2)
+  pop day    : buoy_51001_wvht_mean >= 3.9530 m (fixed metre value)
+  storm day  : swe_gain_in >= 0.5 in at >= 2 reporting stations (any2)
+  events     : detect_events, bridge = 1 day, dated by first day
+  storm onset: the first day of a storm event, so a multi day storm has exactly one onset day and cannot contribute to several lags at once
+  anchors    : pop anchors are pop event first days; non pop anchors are every other day outside every pop event with a defined pop flag (Q25, rule 2.5)
+
+Anchors: 144 pop events and 2537 non pop days at lag 0. The denominator at each lag counts only anchors whose day L is still inside the same winter, so it shrinks towards the long lags and at the season edges.
+  Cross check against numbers already on record, not a new measurement: at lag 18 the denominators are 142 pops and 2263 non pop days, which is the same in season condition the locked rule's window imposes. Phase 5a recorded 142 usable pop occasions at this configuration (DECISIONS.md Q16, F2) and F7 quotes 2263 exploration comparison occasions (c + d = 1438 + 825). The two match, so the anchors here are the study's own occasions counted a different way, not a different sample.
+
+PER LAG TABLE. n_anchors is the denominator behind each probability.
+ lag  n_anchors_pop  n_storm_onsets_pop  probability_pop  pop_smoothed  n_anchors_base  n_storm_onsets_base  probability_base
+   0            144                  12           0.0833        0.0799            2537                  214            0.0844
+   1            144                  11           0.0764        0.0741            2522                  213            0.0845
+   2            144                   9           0.0625        0.0787            2507                  212            0.0846
+   3            144                  14           0.0972        0.0856            2492                  208            0.0835
+   4            144                  14           0.0972        0.0949            2477                  206            0.0832
+   5            144                  13           0.0903        0.0810            2462                  206            0.0837
+   6            144                   8           0.0556        0.0810            2446                  210            0.0859
+   7            144                  14           0.0972        0.0949            2430                  201            0.0827
+   8            144                  19           0.1319        0.0949            2414                  199            0.0824
+   9            144                   8           0.0556        0.0928            2398                  208            0.0867
+  10            143                  13           0.0909        0.0675            2383                  205            0.0860
+  11            143                   8           0.0559        0.0629            2368                  208            0.0878
+  12            143                   6           0.0420        0.0746            2353                  206            0.0875
+  13            143                  18           0.1259        0.0794            2338                  196            0.0838
+  14            142                  10           0.0704        0.0983            2324                  204            0.0878
+  15            142                  14           0.0986        0.0751            2309                  201            0.0871
+  16            142                   8           0.0563        0.0869            2294                  199            0.0867
+  17            142                  15           0.1056        0.0775            2279                  189            0.0829
+  18            142                  10           0.0704        0.0892            2263                  196            0.0866
+  19            142                  13           0.0915        0.0869            2248                  193            0.0859
+  20            142                  14           0.0986        0.0892            2233                  193            0.0864
+  21            142                  11           0.0775        0.0845            2218                  192            0.0866
+  22            142                  11           0.0775        0.0728            2203                  183            0.0831
+  23            142                   9           0.0634        0.0751            2187                  188            0.0860
+  24            142                  12           0.0845        0.0728            2171                  184            0.0848
+  25            142                  10           0.0704        0.0728            2155                  185            0.0858
+  26            142                   9           0.0634        0.0869            2140                  180            0.0841
+  27            142                  18           0.1268        0.0845            2126                  175            0.0823
+  28            142                   9           0.0634        0.0941            2112                  181            0.0857
+  29            141                  13           0.0922        0.0828            2099                  173            0.0824
+  30            140                  13           0.0929        0.0925            2084                  173            0.0830
+
+CAPTION, as written onto the figure:
+
+  Probability that a storm begins on each day after a buoy pop, out to 30 days, on the
+  exploration winters, against the per day baseline (the background chance a storm begins
+  that many days after any non-pop day). The folklore predicts a bump around 12 to 14 days,
+  shaded. The pop line stays close to the baseline across the whole range and the cited
+  range is no exception: it averages 0.0794 there against a baseline of 0.0864, that is,
+  below the background rather than above it. Stated plainly because it is visible: the
+  smoothed line's own highest point does fall at lag 14, at 0.0983 against a baseline of
+  0.0878, but it is a single point about one percentage point above the background, it sits
+  beside lag 12, which carries the lowest raw value in the entire range at 0.0420, and the
+  neighbouring days do not rise with it. That is a wiggle, not a bump. Isolated single day
+  wiggles are expected here because each point rests on only tens of pop events (140 to 144
+  across the lags, shown beneath), each carrying a handful of storm onsets.
+
+  Locked definitions (SPEC 8.2): pop = daily mean wave height at buoy 51001 >= 3.9530 m;
+  storm = SWE gain >= 0.5 in at >= 2 reporting SNOTEL stations (any2); both collapsed into
+  events by detect_events, bridge = 1 day, dated by first day, so a multi day storm has one
+  onset. Anchors whose day L would fall past 30 April are dropped from that lag rather than
+  counted as no storm.
+
+  A true signal would show a broad rise above the baseline sustained across several adjacent
+  days near the cited lag, not a lone spike. This is a descriptive visualisation, not a
+  test, and adds no finding: the study's answer remains F7. Exploration winters only,
+  EXPLORATORY.
+
+Figure: /Users/zacharyadams/powder-buoy/outputs/figures/per_day_storm_onset_after_pop.png
