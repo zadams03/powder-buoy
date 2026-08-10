@@ -84,6 +84,14 @@ physically separate instrument from the snow pillow at the same sites, so this i
 corroboration rather than circularity. The question asked of each pop is the folklore's own:
 **does a storm begin between 10 and 18 days later?** One window, no lag scan, no second look.
 
+![Storm detector check for winter 2016: shaded bands mark each detected storm event on the cross-station mean SWE curve and its daily gains](outputs/figures/storm_detector_check_2016.png)
+
+*The storm detector checked by eye against a single winter (2016): the 13 events it marks,
+shaded, on the cross-station mean SWE curve (top) and the daily SWE gains beneath it. The
+marks land on genuine step-ups in the snowpack rather than on flat or melting stretches —
+evidence that a flat result reflects the buoy, not a broken detector. Drawn at the 1-inch
+`any2` definition; the locked rule uses 0.5 inch. Exploration winters, EXPLORATORY.*
+
 **The bar, written down before the winters were opened.** The rule would count as showing
 skill only if the storm rate after a pop was at least **1.20 times** the base rate *and* the
 Peirce skill score was positive, under both of two declared ways of matching pops to storms.
@@ -111,6 +119,15 @@ which is the strongest form the "report both" requirement could have taken: the 
 not depend on the matching rule. The buoy reported on all 1,086 held-out winter days and all
 five snow stations reported on every one of them, so no day had to be guessed at.
 
+![Dose-response curve: storm rate given a pop swept across pop thresholds, flat and below the base rate at every threshold](outputs/figures/dose_response_curve.png)
+
+*The same null in its visual form, on the exploration winters: storm rate given a pop swept
+from the loosest pop threshold to the strictest, against the base rate (dashed). The curve
+does not climb as the threshold tightens and never rises above its own base rate — at 0 of 5
+absolute thresholds and 0 of 4 z-score thresholds. Drawn at the stricter 1-inch `any2` storm
+definition, which is why its base rate sits near 0.33 rather than the 0.63 the 0.5-inch
+definition gives above. Exploration winters, EXPLORATORY.*
+
 The Peirce skill score came out at **+0.0097** — fractionally positive where the exploration
 winters were fractionally negative, and nowhere near skill. That sliver was disarmed in
 advance rather than after the fact: the protocol states, in text written before the winters
@@ -128,6 +145,15 @@ lock onto: of 279 lag × pop-threshold combinations, exactly one had a positive 
 +0.00066, and the longest run of consecutive positive lags at any threshold was one. A real
 atmospheric signal would show a broad bump across neighbouring lags, because weather patterns
 persist for days. There was no bump.
+
+![Lag scan: Peirce skill score against lag from 0 to 30 days, flat and below the no-skill line at every lag including the shaded folklore window](outputs/figures/lag_scan_pss.png)
+
+*Peirce skill score against lag, 0 to 30 days, for the five absolute pop definitions, with
+the folklore's own 10–18 day window shaded. The curves sit below the no-skill line at very
+nearly every lag — inside the folklore window and outside it — with no broad bump anywhere for
+a real regime signal to have made. The lone point that clears zero, at lag 1, is the +0.00066
+quoted above: the only positive score in the whole 279-combination scan. Exploration winters, storm = 1 inch
+`any2`, EXPLORATORY.*
 
 Because the simple counting test found nothing, no model was ever built. That was a gate set
 in the specification before the data was touched: if contingency tables show nothing, a model
@@ -179,6 +205,15 @@ it:
   change in how the MJO index itself is calculated at the end of 2013. A data artefact and a
   genuine two-decade difference cannot be separated in this record, and no attempt was made to
   pretend otherwise.
+
+  ![Buoy 51001 mean and median wave height by MJO phase, barely separated from the all-day mean](outputs/figures/mjo_link_a_swell_by_phase.png)
+
+  *Daily mean wave height at 51001 by MJO phase, on coherent-MJO days only (amplitude > 1),
+  against the all-day mean of 2.862 m (dashed). The figure is a descriptive sweep and says so
+  on its face — no individual phase in it is a finding. The declared test behind it groups the
+  favourable phases 6–8 against the unfavourable 2–4 and gives the 2.98 m against 2.82 m above:
+  the direction the hypothesis predicts, and only 0.18 of a standard deviation of it. That is
+  the whole of the mechanism the folklore would need. Exploration winters, EXPLORATORY.*
 - **Six held-out winters give a directional answer, not a precise one.** The held-out set was
   sized by the buoy's own five-year archive gap, and that limitation was accepted knowingly
   when the winters were split, not discovered afterwards.
@@ -210,7 +245,7 @@ signal."* That is the result.
 | `src/powderbuoy/events.py` | Event detection, contingency tables, the lag scan |
 | `src/powderbuoy/mjo.py` | The mechanism check: MJO ↔ swell and MJO ↔ snow |
 | `src/powderbuoy/holdout_eval.py` | The single held-out run |
-| `outputs/` | Every report and figure the analysis produced, including `phase7_holdout_result.txt` (the answer) and `experiments/register.csv` (the audit trail) |
+| `outputs/` | Every report and figure the analysis produced, including `phase7_holdout_result.txt` (the answer) and `experiments/register.csv` (the audit trail); the four figures above are embedded from `outputs/figures/`, which also holds the z-score lag scan, the MJO snow link, the 2013/14 seam check and raw-data winter plots |
 | `config/regions/utah.yaml` | Station identifiers and the winter lists. No station ID is hardcoded in a module |
 | `tests/` | 63 tests |
 
