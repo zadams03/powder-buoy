@@ -1,14 +1,17 @@
 # SPEC.md — Powder Buoy
 
-**Version: 0.9**
-**Status: Phases 0–4 complete; Phase 5 Stages 1–2 (counting) run on the exploration
-winters (Session 5a); the MJO mechanism check run on the same winters (Session 5b);
-Phase 6 complete — Section 8, the evaluation protocol, is written and LOCKED (Session 6);
-and Phase 7 complete — the held-out set was OPENED ONCE, 2026-08-09, and the locked
-folklore rule scored on it against Section 8 as frozen at spec version 0.8. The seal is
-now spent: it cannot be re-sealed and the six held-out winters are never scored again.
-Stage 3 (modelling) is GATED and the gate did not open, so no model exists and none was
-tested. Next is Phase 8, the write-up.**
+**Version: 1.0**
+**Status: PROJECT COMPLETE. All phases 0–8 are done.** Phases 0–4 built the data and
+sealed the held-out winters; Phase 5 Stages 1–2 (counting) and the Phase 5b mechanism
+check ran on the exploration winters; Phase 6 wrote and LOCKED Section 8, the evaluation
+protocol; Phase 7 OPENED the held-out set ONCE, 2026-08-09, and scored the locked folklore
+rule against Section 8 as frozen at spec version 0.8; Phase 8 wrote `README.md`, which is
+the project's deliverable. **The answer is finding F7, NULL CONFIRMED: after a buoy pop a
+storm followed within 10–18 days 0.6818 of the time on the held-out winters, against a base
+rate of 0.6339 (rule 2.2) — a ratio of 1.0755 against a pre-declared bar of 1.20.** The
+seal is spent: it cannot be re-sealed and the six held-out winters are never scored again.
+Stage 3 (modelling) is GATED, the gate did not open, so no model exists and none was
+tested. Nothing further is planned.
 
 This file is the stable specification. It describes what the project is, what data it
 uses, how it must be built, and how it will be judged. It changes rarely.
@@ -354,11 +357,13 @@ it is. Amplitude below 1.0 is conventionally treated as "no coherent MJO".
   year, one column per month. Missing/not-yet-occurred months are sentinel `99.99`.
   Returned range at fetch time: 1854 onward.
 
-### 3.4 Comparison forecasts — deferred
+### 3.4 Comparison forecasts — not pursued
 
 GEFS Reforecast v12 is available free on AWS Open Data and would let us compare against
-a real operational week-2 forecast. This is powerful but heavy. Deferred to a later
-phase. Tracked in `DECISIONS.md`.
+a real operational week-2 forecast. This is powerful but heavy. **Closed in Phase 8 (spec
+version 1.0) as not pursued** — see `DECISIONS.md` Q9: the revisit condition was "only if
+Phase 7 shows the buoy has skill", and Phase 7 shows none (F7). Still a good idea for a
+fresh study with its own sealed set.
 
 ---
 
@@ -543,6 +548,14 @@ it, which is not optional — and for the mechanism check (Phase 5b) that was ru
 Stage 2 as a documented addition to those three stages, not as one of them.
 
 Phase 6 writes Section 8 and freezes it.
+
+**How to read Section 8 now that Phase 7 has run (added 1.0).** Section 8 is a
+**pre-registration**: it was written before the held-out winters were unsealed, and it is
+preserved exactly as written, in its original present tense ("this is exactly what Phase 7
+runs"). That tense is deliberate and is not stale text awaiting a fix — editing it to past
+tense after the fact would destroy the guarantee that gives the held-out result its
+meaning (rule 2.3). What Phase 7 actually did is recorded in `STATUS.md`, in
+`DECISIONS.md` F7, and in `outputs/phase7_holdout_result.txt`.
 
 Phase 7 unseals the held-out set and runs once. It scores **the locked folklore rule
 only**; the four-model comparison is **not run**, because the Stage 3 gate did not open —
@@ -1085,8 +1098,14 @@ Recorded so that no session drifts into these.
 
 ### 11.1 Deferred, not excluded
 
-- **Dashboard or web app.** Decided after Phase 7. Only worth building if the answer is
-  interesting. A dashboard that displays "this does not work" is not worth the time.
+- **Dashboard or web app. DECIDED IN PHASE 8 (spec version 1.0, 2026-08-09): NOT BUILT.**
+  The decision was deferred to after Phase 7 on the stated condition that it was only worth
+  building if the answer was interesting. Phase 7's answer is a null (F7, NULL CONFIRMED),
+  so there is nothing live to display: a dashboard that shows "this does not work" is not
+  worth the time, and the folklore rule it would have to run is the rule the study just
+  found does not beat the base rate. **A null result does not warrant a live dashboard.**
+  The deliverable is `README.md` and the code that produced every number. Not deferred any
+  further — closed.
 - **Neural networks.** Not justified at the data volume available here, and
   interpretability matters more than raw fit. Session 0A measured the record as two eras
   either side of the 2010–2014 buoy gap rather than one unbroken ~40-winter span, and
