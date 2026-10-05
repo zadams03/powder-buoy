@@ -38,7 +38,7 @@ import textwrap
 import numpy as np
 import pandas as pd
 
-from powderbuoy.config import load_config
+from powderbuoy.config import load_config, repo_relative
 from powderbuoy.events import (
     BRIDGE_DAYS,
     build_storm_flags,
@@ -705,7 +705,7 @@ def build_per_day_note(
     for paragraph in caption.split("\n"):
         out.append(textwrap.fill(paragraph, width=92, initial_indent="  ", subsequent_indent="  "))
         out.append("")
-    out.append(f"Figure: {figure_path}")
+    out.append(f"Figure: {repo_relative(figure_path)}")
     return "\n".join(out)
 
 
@@ -771,8 +771,8 @@ def run_hypothesis_grid(df: pd.DataFrame, config: dict, figures_dir) -> None:
 
     out_path = figures_dir / FIGURE_NAME
     plot_hypothesis_grid(panels, out_path)
-    print(f"Figure saved: {out_path}")
-    logger.info("Wrote %s", out_path)
+    print(f"Figure saved: {repo_relative(out_path)}")
+    logger.info("Wrote %s", repo_relative(out_path))
 
 
 def run_per_day_onset(df: pd.DataFrame, config: dict, figures_dir) -> None:
@@ -798,8 +798,8 @@ def run_per_day_onset(df: pd.DataFrame, config: dict, figures_dir) -> None:
     print(note)
     note_path = config["paths"]["outputs"] / PER_DAY_NOTE_NAME
     note_path.write_text(note)
-    logger.info("Wrote %s", note_path)
-    logger.info("Wrote %s", figure_path)
+    logger.info("Wrote %s", repo_relative(note_path))
+    logger.info("Wrote %s", repo_relative(figure_path))
 
 
 FIGURE_RUNNERS = {

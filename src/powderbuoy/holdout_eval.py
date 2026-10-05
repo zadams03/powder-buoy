@@ -32,7 +32,7 @@ import uuid
 import numpy as np
 import pandas as pd
 
-from powderbuoy.config import load_config
+from powderbuoy.config import load_config, repo_relative
 from powderbuoy.events import (
     BRIDGE_DAYS,
     build_storm_flags,
@@ -612,11 +612,11 @@ def main(argv: list[str] | None = None) -> None:
 
     report_path = outputs_dir / "phase7_holdout_result.txt"
     report_path.write_text(text)
-    logger.info("Wrote %s", report_path)
+    logger.info("Wrote %s", repo_relative(report_path))
 
     register_path = outputs_dir / "experiments" / "register.csv"
     append_register_row(register_path, register_row)
-    logger.info("Appended register row to %s", register_path)
+    logger.info("Appended register row to %s", repo_relative(register_path))
 
 
 if __name__ == "__main__":

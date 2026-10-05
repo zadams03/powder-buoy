@@ -79,4 +79,4 @@ CAPTION, as written onto the figure:
   test, and adds no finding: the study's answer remains F7. Exploration winters only,
   EXPLORATORY.
 
-Figure: /Users/zacharyadams/powder-buoy/outputs/figures/per_day_storm_onset_after_pop.png
+Figure: outputs/figures/per_day_storm_onset_after_pop.png

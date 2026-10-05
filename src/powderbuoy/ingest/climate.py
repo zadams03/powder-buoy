@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-from powderbuoy.config import load_config
+from powderbuoy.config import load_config, repo_relative
 
 logger = logging.getLogger(__name__)
 
@@ -401,7 +401,7 @@ def main(argv: list[str] | None = None) -> None:
     processed_dir.mkdir(parents=True, exist_ok=True)
     climate_out = processed_dir / "climate_daily.parquet"
     climate_daily.to_parquet(climate_out, index=False)
-    logger.info("Wrote %s (%d rows)", climate_out, len(climate_daily))
+    logger.info("Wrote %s (%d rows)", repo_relative(climate_out), len(climate_daily))
 
     buoy_path = processed_dir / "buoy_daily.parquet"
     snow_path = processed_dir / "snow_daily.parquet"
@@ -418,7 +418,7 @@ def main(argv: list[str] | None = None) -> None:
 
     analysis_out = processed_dir / "analysis_daily.parquet"
     analysis_daily.to_parquet(analysis_out, index=False)
-    logger.info("Wrote %s (%d rows)", analysis_out, len(analysis_daily))
+    logger.info("Wrote %s (%d rows)", repo_relative(analysis_out), len(analysis_daily))
 
 
 if __name__ == "__main__":

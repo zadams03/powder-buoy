@@ -22,7 +22,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from powderbuoy.config import load_config
+from powderbuoy.config import load_config, repo_relative
 from powderbuoy.seasons import load_analysis_data
 
 logger = logging.getLogger(__name__)
@@ -868,7 +868,7 @@ def main(argv: list[str] | None = None) -> None:
         PRIMARY_STORM_THRESHOLD_IN, PRIMARY_STORM_COMBINATION, detector_path,
     )
     out.append(
-        f"4b — eyeball plot saved: {detector_path} "
+        f"4b — eyeball plot saved: {repo_relative(detector_path)} "
         f"(winter {DETECTOR_CHECK_WINTER}, {PRIMARY_STORM_THRESHOLD_IN:g} in "
         f"{PRIMARY_STORM_COMBINATION}, {n_marked} events marked)"
     )
@@ -965,7 +965,7 @@ def main(argv: list[str] | None = None) -> None:
 
     dose_path = figures_dir / "dose_response_curve.png"
     plot_dose_response(primary, dose_path)
-    out.append(f"  Dose-response curve saved: {dose_path}")
+    out.append(f"  Dose-response curve saved: {repo_relative(dose_path)}")
     out.append("  Shape of the dose-response curve, in words:")
     out.append(
         describe_dose_response(
@@ -1027,7 +1027,7 @@ def main(argv: list[str] | None = None) -> None:
     out.append("  PSS by lag, every swept pop threshold:")
     out.append(pivot.to_string(float_format=lambda v: "%.4f" % v))
     out.append("")
-    out.append(f"  Lag scan plots saved: {lag_path}, {lag_z_path}")
+    out.append(f"  Lag scan plots saved: {repo_relative(lag_path)}, {repo_relative(lag_z_path)}")
     out.append("  Shape of the lag scan, in words (no lag is crowned):")
     out.extend(describe_lag_scan(scan, abs_labels + z_labels))
     out.append("")
@@ -1042,7 +1042,7 @@ def main(argv: list[str] | None = None) -> None:
     print(text)
     report_path = outputs_dir / "phase5a_counting_report.txt"
     report_path.write_text(text)
-    logger.info("Wrote %s", report_path)
+    logger.info("Wrote %s", repo_relative(report_path))
 
 
 if __name__ == "__main__":

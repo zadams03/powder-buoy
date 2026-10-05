@@ -40,7 +40,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from powderbuoy.config import load_config
+from powderbuoy.config import load_config, repo_relative
 from powderbuoy.events import (
     BRIDGE_DAYS,
     build_storm_flags,
@@ -1091,14 +1091,14 @@ def run_seam_check(argv_region: str = "utah") -> str:
 
     figure_path = figures_dir / "mjo_seam_check.png"
     plot_seam_check(link_a, link_b, figure_path)
-    out.append(f"Figure saved: {figure_path}")
+    out.append(f"Figure saved: {repo_relative(figure_path)}")
     out.append("")
     out.extend(seam_check_read(link_a, link_b))
 
     text = "\n".join(out)
     report_path = outputs_dir / "phase6_seam_check_report.txt"
     report_path.write_text(text)
-    logger.info("Wrote %s", report_path)
+    logger.info("Wrote %s", repo_relative(report_path))
     return text
 
 
@@ -1332,7 +1332,7 @@ def main(argv: list[str] | None = None) -> None:
     out.append(_table(sweep_a))
     link_a_path = figures_dir / "mjo_link_a_swell_by_phase.png"
     plot_link_a_sweep(sweep_a, link_a["all_day_mean_m"], link_a_path)
-    out.append(f"  Sweep plot saved: {link_a_path}")
+    out.append(f"  Sweep plot saved: {repo_relative(link_a_path)}")
     spread = float(sweep_a["mean_wvht_m"].max() - sweep_a["mean_wvht_m"].min())
     out.append(
         f"  Sweep shape: per-phase means span {sweep_a['mean_wvht_m'].min():.3f} to "
@@ -1435,7 +1435,7 @@ def main(argv: list[str] | None = None) -> None:
         out.append("")
     link_b_path = figures_dir / "mjo_link_b_storms_by_phase.png"
     plot_link_b_sweep(sweeps, link_b_path)
-    out.append(f"  Sweep plot saved: {link_b_path}")
+    out.append(f"  Sweep plot saved: {repo_relative(link_b_path)}")
     lagged_sweep = sweeps[
         f"lagged (window {LAGGED_WINDOW[0]}-{LAGGED_WINDOW[1]} days)"
     ]
@@ -1473,7 +1473,7 @@ def main(argv: list[str] | None = None) -> None:
     print(text)
     report_path = outputs_dir / "phase5b_mjo_report.txt"
     report_path.write_text(text)
-    logger.info("Wrote %s", report_path)
+    logger.info("Wrote %s", repo_relative(report_path))
 
 
 if __name__ == "__main__":

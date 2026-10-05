@@ -61,7 +61,7 @@ unfavourable (2,3,4)     767  2.8204    2.7225 0.7656
      6   favourable     241       3.0025         2.8833
      7   favourable     295       2.9375         2.7525
      8   favourable     200       3.0148         2.7615
-  Sweep plot saved: /Users/zacharyadams/powder-buoy/outputs/figures/mjo_link_a_swell_by_phase.png
+  Sweep plot saved: outputs/figures/mjo_link_a_swell_by_phase.png
   Sweep shape: per-phase means span 2.666 to 3.015 m (spread 0.349 m, 0.39 sd) around an all-day mean of 2.862 m.
   Any phase standing out here is EXPLORATORY ONLY and would require a fresh out-of-sample test to confirm.
 
@@ -123,7 +123,7 @@ PART 3 — LINK B: MJO <-> UTAH SNOW
      7   favourable     277      0.3791     0.4525
      8   favourable     184      0.3696     0.4525
 
-  Sweep plot saved: /Users/zacharyadams/powder-buoy/outputs/figures/mjo_link_b_storms_by_phase.png
+  Sweep plot saved: outputs/figures/mjo_link_b_storms_by_phase.png
   Sweep shape (lagged): per-phase storm rates span 0.3022 to 0.5078 around a base rate of 0.4525; 3 of 8 phases sit above it.
   Any phase standing out here is EXPLORATORY ONLY and would require a fresh out-of-sample test to confirm. It is not a finding and is not reported as one.
 

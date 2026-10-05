@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-from powderbuoy.config import load_config
+from powderbuoy.config import load_config, repo_relative
 
 logger = logging.getLogger(__name__)
 
@@ -388,12 +388,12 @@ def main(argv: list[str] | None = None) -> None:
     processed_dir.mkdir(parents=True, exist_ok=True)
     out_parquet = processed_dir / "buoy_daily.parquet"
     buoy_daily.to_parquet(out_parquet, index=False)
-    logger.info("Wrote %s (%d rows)", out_parquet, len(buoy_daily))
+    logger.info("Wrote %s (%d rows)", repo_relative(out_parquet), len(buoy_daily))
 
     outputs_dir.mkdir(parents=True, exist_ok=True)
     report_path = outputs_dir / "buoy_ingest_report.txt"
     report_path.write_text(report)
-    logger.info("Wrote %s", report_path)
+    logger.info("Wrote %s", repo_relative(report_path))
 
 
 if __name__ == "__main__":

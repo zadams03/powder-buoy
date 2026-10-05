@@ -1,5 +1,7 @@
 import datetime as dt
 
+import pytest
+
 from powderbuoy.config import load_config
 from powderbuoy.seasons import load_analysis_data, winter_of
 
@@ -19,12 +21,14 @@ def test_winter_of_returns_none_outside_winter():
     assert winter_of(dt.date(2016, 7, 1)) is None
 
 
+@pytest.mark.needs_processed_data
 def test_default_load_excludes_held_out_winters():
     df = load_analysis_data(region="utah")
     present = set(df["winter"].unique())
     assert present.isdisjoint(HELD_OUT_WINTERS)
 
 
+@pytest.mark.needs_processed_data
 def test_include_holdout_reveals_exactly_the_held_out_winters():
     df_default = load_analysis_data(region="utah")
     df_all = load_analysis_data(region="utah", include_holdout=True)
@@ -32,6 +36,7 @@ def test_include_holdout_reveals_exactly_the_held_out_winters():
     assert revealed == HELD_OUT_WINTERS
 
 
+@pytest.mark.needs_processed_data
 def test_season_set_labelling_matches_config_for_a_sample():
     config = load_config("utah")
     seasons_cfg = config["seasons"]
@@ -48,12 +53,14 @@ def test_season_set_labelling_matches_config_for_a_sample():
         assert labels.get(sample_folklore_only) == "folklore_only"
 
 
+@pytest.mark.needs_processed_data
 def test_no_winter_carries_more_than_one_label():
     df = load_analysis_data(region="utah", include_holdout=True)
     labels_per_winter = df.groupby("winter")["season_set"].nunique()
     assert (labels_per_winter == 1).all()
 
 
+@pytest.mark.needs_processed_data
 def test_loader_winter_lists_match_config_exactly():
     config = load_config("utah")
     seasons_cfg = config["seasons"]

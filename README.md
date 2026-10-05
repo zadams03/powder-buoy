@@ -1,13 +1,37 @@
 # Powder Buoy
 
+**In brief.** Does a wave-height spike at NOAA buoy 51001, near Hawaii, predict a storm in
+Utah's Wasatch mountains 10–18 days later? If anything about that works, the buoy cannot be
+tracking the storm itself; it would have to be a proxy for the MJO and the North Pacific
+storm track. The rule was explored on 16 winters, then run once on 6 held-out winters that
+were sealed until the rule and its pass mark were locked. After a pop a storm followed
+0.6818 of the time, against a base rate of 0.6339: a ratio of 1.0755 against a pre-declared
+bar of 1.20, so the null is confirmed. The chain breaks at the first link: swell is higher in
+the favourable MJO phases by only 0.18 of a standard deviation.
+
+![Four exploration winters, each showing the Wasatch mean SWE curve with storm events shaded, every buoy pop marked, and each pop's 10 to 18 day window drawn as a bar](outputs/figures/hypothesis_pops_over_swe_grid.png)
+
+*The folklore's claim, drawn over four winters (1989, 1990, 2015, 2016). Each triangle is a
+buoy pop and the bar to its right is the window in which the folklore says a storm will
+begin, 10 to 18 days later; the orange bands are detected storm events on the cross-station
+mean SWE curve. A bar over an orange band is a hit, a bar over flat or melting snowpack is a
+miss, and an orange band with no bar over it is a storm the buoy never called. The bars do
+not line up with the step-ups. The four winters were chosen by a rule declared before the
+figure was drawn (the two most data-complete winters in each climate era either side of the
+2010–2014 buoy gap, ties broken by the earliest), not by how the pops line up with the
+storms. Definitions are the locked rule's: pop = daily mean wave height at 51001 of at least
+3.9530 m, storm = SWE gain of at least 0.5 inches at two or more reporting stations.
+Exploration winters, EXPLORATORY.*
+
 A test of whether a Pacific Ocean buoy near Hawaii predicts snowstorms in Utah's Wasatch
 mountains about two weeks later. It does not — and this repository is the record of how
 that was established, on winters no part of the test was tuned on.
 
-The project is complete. `SPEC.md` is the method and the source of truth, `STATUS.md` the
-state, `DECISIONS.md` the open questions and the findings log. Every number below is quoted
-from one of those files or from a report in `outputs/`; nothing here was computed for the
-write-up.
+The project is complete. [`process/SPEC.md`](process/SPEC.md) is the method and the source
+of truth, [`process/STATUS.md`](process/STATUS.md) the state,
+[`process/DECISIONS.md`](process/DECISIONS.md) the open questions and the findings log.
+Every number below is quoted from one of those files or from a report in `outputs/`; nothing
+here was computed for the write-up.
 
 ---
 
@@ -66,9 +90,9 @@ that one system is counted once.
 22 usable winters were split before any analysis: 16 **exploration** winters where anything
 was permitted — scan every lag, try every threshold, change your mind — and 6 **held-out**
 winters (2004, 2005, 2006, 2008, 2021, 2022) that no code read and no person looked at until
-the test was written down and frozen. The rule below was fixed in advance, in `SPEC.md`
-Section 8, including the number it had to beat, and then run **once**. The seal is now spent
-and cannot be re-sealed.
+the test was written down and frozen. The rule below was fixed in advance, in
+[`process/SPEC.md`](process/SPEC.md) Section 8, including the number it had to beat, and
+then run **once**. The seal is now spent and cannot be re-sealed.
 
 **The rule that was locked and run.** A *pop day* is a day with a daily mean significant wave
 height at 51001 of at least **3.9530 m** — the 90th percentile of the exploration winters,
@@ -155,6 +179,17 @@ a real regime signal to have made. The lone point that clears zero, at lag 1, is
 quoted above: the only positive score in the whole 279-combination scan. Exploration winters, storm = 1 inch
 `any2`, EXPLORATORY.*
 
+![Per-day storm onset probability after a pop, lags 0 to 30 days, against the same quantity from non-pop days, flat with no rise in the folklore's cited range](outputs/figures/per_day_storm_onset_after_pop.png)
+
+*The same question asked one day at a time rather than through a nine-day window, since a
+window could smear a sharp, narrowly timed signal. For each lag from 0 to 30 days it plots
+the fraction of pop events whose day L is the first day of a storm event, against the same
+fraction from non-pop days, with the folklore's cited 12 to 14 day range shaded and a 3-day
+centred mean drawn beside the raw line. It is flat: the pop line sits on the baseline across
+the whole range, and in the cited range it averages 0.0794 against a baseline of 0.0864,
+below the background rather than above it. Locked definitions throughout (pop at 3.9530 m,
+storm at 0.5 inch `any2`). Exploration winters, EXPLORATORY.*
+
 Because the simple counting test found nothing, no model was ever built. That was a gate set
 in the specification before the data was touched: if contingency tables show nothing, a model
 will not find a signal that is absent — it will find a more elaborate way to overfit.
@@ -219,7 +254,8 @@ it:
   when the winters were split, not discovered afterwards.
 - **Everything except the final test is exploratory.** Only the single held-out run is a
   confirmed finding. The lag scan, the mechanism check and the detector validation are all
-  labelled EXPLORATORY in `DECISIONS.md` and none may be read as a conclusion.
+  labelled EXPLORATORY in [`process/DECISIONS.md`](process/DECISIONS.md) and none may be
+  read as a conclusion.
 
 ## Conclusion
 
@@ -237,17 +273,19 @@ signal."* That is the result.
 
 | Path | What it is |
 | --- | --- |
-| `SPEC.md` | The specification and source of truth: the question, the data, the critical rules, and Section 8 — the evaluation protocol, frozen before the held-out winters were opened and preserved exactly as written |
-| `STATUS.md` | Current state, the build log session by session, and the data state |
-| `DECISIONS.md` | Open questions (Q1–Q32) and the findings log (F1–F7). F7 is the answer; F4–F6 are why it fails; F1–F3 are what was measured on the way |
+| [`process/SPEC.md`](process/SPEC.md) | The specification and source of truth: the question, the data, the critical rules, and Section 8 — the evaluation protocol, frozen before the held-out winters were opened and preserved exactly as written |
+| [`process/STATUS.md`](process/STATUS.md) | Current state, the build log session by session, and the data state |
+| [`process/DECISIONS.md`](process/DECISIONS.md) | Open questions (Q1–Q32) and the findings log (F1–F7). F7 is the answer; F4–F6 are why it fails; F1–F3 are what was measured on the way |
+| [`process/`](process/README.md) | How the project was run: spec, status, decisions log and every session prompt, archived as-is |
 | `src/powderbuoy/ingest/` | `ndbc.py`, `snotel.py`, `climate.py` — download and clean buoy, snow and climate-index data |
 | `src/powderbuoy/seasons.py` | The season split, and the loader that excludes the held-out winters by default |
 | `src/powderbuoy/events.py` | Event detection, contingency tables, the lag scan |
 | `src/powderbuoy/mjo.py` | The mechanism check: MJO ↔ swell and MJO ↔ snow |
 | `src/powderbuoy/holdout_eval.py` | The single held-out run |
-| `outputs/` | Every report and figure the analysis produced, including `phase7_holdout_result.txt` (the answer) and `experiments/register.csv` (the audit trail); the four figures above are embedded from `outputs/figures/`, which also holds the z-score lag scan, the MJO snow link, the 2013/14 seam check and raw-data winter plots |
+| `outputs/` | Every report and figure the analysis produced, including `phase7_holdout_result.txt` (the answer) and `experiments/register.csv` (the audit trail); the six figures above are embedded from `outputs/figures/`, which also holds the z-score lag scan, the MJO snow link, the 2013/14 seam check and raw-data winter plots |
 | `config/regions/utah.yaml` | Station identifiers and the winter lists. No station ID is hardcoded in a module |
-| `tests/` | 63 tests |
+| `tests/` | 69 tests |
+| [`LICENSE`](LICENSE) | MIT |
 
 Data is not committed — `data/raw/` and `data/processed/` are gitignored — because every byte
 of it is freely downloadable from NOAA, the USDA NRCS and the Australian Bureau of Meteorology,
@@ -270,7 +308,7 @@ uv run python -m powderbuoy.events             # contingency tables + lag scan (
 uv run python -m powderbuoy.mjo                # the MJO mechanism check (exploration only)
 uv run python -m powderbuoy.mjo --seam-check   # the same tests either side of the 2013/14 seam
 
-uv run pytest tests/ -v                        # 63 tests
+uv run pytest tests/ -v                        # 69 tests
 ```
 
 Every script takes `--region` (default `utah`) and `--seed` (default 42), reads raw downloads
@@ -281,6 +319,13 @@ project that passes `include_holdout=True`. Re-running it reproduces the recorde
 data, which is the point of keeping it; it does not constitute a second test. The seal was
 spent on 2026-08-09 and anything computed on those six winters from now on is exploratory
 forever.
+
+## How this was built
+
+The owner designed the study and directed it through written session prompts, one per
+session. Claude Code wrote the code, working from those prompts. Every rule and every
+decision is recorded in [`process/`](process/README.md), which explains how the files were
+used and in what order to read them.
 
 ## A note on method
 

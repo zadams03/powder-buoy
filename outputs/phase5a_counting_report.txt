@@ -73,7 +73,7 @@ PART 4 — STORM DETECTOR VALIDATION
     1.5 in / any2: mean 2.2 events per winter
     1.5 in / mean: mean 1.4 events per winter
 
-4b — eyeball plot saved: /Users/zacharyadams/powder-buoy/outputs/figures/storm_detector_check_2016.png (winter 2016, 1 in any2, 13 events marked)
+4b — eyeball plot saved: outputs/figures/storm_detector_check_2016.png (winter 2016, 1 in any2, 13 events marked)
   Eyeball result: every one of the marked bands sits on a visible step-up in the cross-station mean SWE curve — no mark lands on flat or melting snow, so the detector is not firing on noise. The converse is not clean: at least one clear multi-day step-up (early Feb 2017, roughly 22.4 to 25.2 in over about a week) carries no mark, because it accumulated at 0.4-0.75 in/day and never reached 1 inch at two stations on any single day. The 1-inch threshold therefore misses slow-accumulation storms, which is the same finding 4a flags from the counts. Reported, not fixed — the threshold choice is Phase 6's (Q6).
 
 4c — precipitation cross-check (1 in any2): 111 of 111 SWE-detected storm events coincide (within +/-1 day) with a positive daily precipitation increment at 2 or more stations = 1.0000
@@ -273,7 +273,7 @@ z_0.5sd   Louis Meadow          0.1409     0.1635 -0.0201              220      
 z_1.5sd   Louis Meadow          0.1639     0.1638  0.0001              122              55
   z_2sd   Louis Meadow          0.1341     0.1631 -0.0078               82              55
 
-  Dose-response curve saved: /Users/zacharyadams/powder-buoy/outputs/figures/dose_response_curve.png
+  Dose-response curve saved: outputs/figures/dose_response_curve.png
   Shape of the dose-response curve, in words:
   absolute / percentile sweep: storm rate given a pop runs 0.264 to 0.286 (spread 0.022) against a base rate of 0.334. Loosest to strictest it falls by -0.021, and it sits above the base rate at 0 of 5 swept thresholds. The whole curve lies within 0.070 of the base rate.
   z-score sweep: storm rate given a pop runs 0.250 to 0.280 (spread 0.030) against a base rate of 0.328. Loosest to strictest it rises by +0.030, and it sits above the base rate at 0 of 4 swept thresholds. The whole curve lies within 0.078 of the base rate.
@@ -351,7 +351,7 @@ lag
 29   -0.0443  -0.0288  -0.0135  -0.0058  -0.0037  -0.0343 -0.0059  -0.0021 -0.0099
 30   -0.0483  -0.0302  -0.0136  -0.0085  -0.0038  -0.0351 -0.0113  -0.0096 -0.0077
 
-  Lag scan plots saved: /Users/zacharyadams/powder-buoy/outputs/figures/lag_scan_pss.png, /Users/zacharyadams/powder-buoy/outputs/figures/lag_scan_pss_zscore.png
+  Lag scan plots saved: outputs/figures/lag_scan_pss.png, outputs/figures/lag_scan_pss_zscore.png
   Shape of the lag scan, in words (no lag is crowned):
   abs_p50: PSS runs -0.0613 to +0.0007 across lags 0-30; 1 of 31 lags are above zero, longest run of consecutive positive lags = 1. Best lag = 1.
   abs_p75: PSS runs -0.0401 to -0.0001 across lags 0-30; 0 of 31 lags are above zero, longest run of consecutive positive lags = 0. Best lag = 0.

@@ -12,6 +12,7 @@ and never score the rule — scoring happens exactly once, in the run itself.
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from powderbuoy import holdout_eval
 from powderbuoy.holdout_eval import (
@@ -30,6 +31,7 @@ FOLKLORE_ONLY_WINTERS = {2023, 2024, 2025}
 # --- 1. The box is opened deliberately, and opened correctly -----------------
 
 
+@pytest.mark.needs_processed_data
 def test_holdout_loader_asks_for_the_holdout_explicitly(monkeypatch):
     """The unsealing must be an explicit include_holdout=True, not a forgotten filter."""
     seen = {}
@@ -45,6 +47,7 @@ def test_holdout_loader_asks_for_the_holdout_explicitly(monkeypatch):
     assert seen.get("include_holdout") is True
 
 
+@pytest.mark.needs_processed_data
 def test_holdout_frame_scores_exactly_the_six_held_out_winters():
     df = load_holdout_frame(region="utah")
     winters = tuple(sorted(int(w) for w in df["winter"].unique()))
@@ -53,6 +56,7 @@ def test_holdout_frame_scores_exactly_the_six_held_out_winters():
     assert winters == (2004, 2005, 2006, 2008, 2021, 2022)
 
 
+@pytest.mark.needs_processed_data
 def test_holdout_frame_pools_in_no_exploration_or_folklore_only_winter():
     """SPEC 8.2: the six are scored on their own. SPEC 8.5: 2023-2025 are not used."""
     df = load_holdout_frame(region="utah")

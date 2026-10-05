@@ -31,7 +31,7 @@ post_seam          6        1.0000   1-14                276                  28
 post_seam          6        0.5000    0-0                297                  307              95                 0.0741                   0.0945     0.0873      0.7842 -0.0659          contrary
 post_seam          6        0.5000   1-14                276                  282              95                 0.8768                   0.7766     0.8227      1.1290  0.1744 present but small
 
-Figure saved: /Users/zacharyadams/powder-buoy/outputs/figures/mjo_seam_check.png
+Figure saved: outputs/figures/mjo_seam_check.png
 
 DOES THE SEAM CHANGE THE STORY?
 

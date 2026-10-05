@@ -31,6 +31,18 @@ _REQUIRED_REGION_KEYS = [
 ]
 
 
+def repo_relative(path) -> Path:
+    """Return `path` relative to the repo root, for printing saved-file paths.
+
+    Paths outside the repo are returned unchanged.
+    """
+    path = Path(path).resolve()
+    try:
+        return path.relative_to(REPO_ROOT)
+    except ValueError:
+        return path
+
+
 def _require(config: dict, keys: tuple, source: Path) -> None:
     node = config
     for key in keys:
