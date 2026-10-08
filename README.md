@@ -49,14 +49,12 @@ missing baseline is the whole story, and it is what this project set out to supp
 
 ## Why it cannot work the way it is described
 
-The usual explanation is that a low-pressure system passes the buoy and later arrives over
-Utah. The timing does not work. Long-period ocean swell travels roughly 1,000 km per day, so a storm near the Aleutians sends swell to Hawaii within three to five days with the storm’s weather reaching Utah in roughly the same amount of time, not fourteen days. Whatever the buoy is seeing, it is not the storm that later hits the Wasatch.
+The folklore explanation is that a low-pressure system passes the buoy and later arrives over Utah. The timing does not work. In deep water, swell-group speed depends on period: approximately 670 km/day for 10-second swell and 940 km/day for 14-second swell. Swell from a distant North Pacific storm can reach Hawaii within several days, whereas the storm’s downstream influence on Utah depends on atmospheric steering and development. A direct ‘the same storm reaches Utah two weeks later’ explanation is therefore physically oversimplified and would require a specific synoptic analysis. Very simply: whatever the buoy is seeing, it is not the storm that later hits the Wasatch.
 
 If a real signal exists, then, the buoy has to be a *proxy for a large-scale atmospheric
 pattern* rather than a tracker of individual storms. The obvious candidate is the
 Madden–Julian Oscillation (MJO), a band of tropical convection that circles the globe on a
-30–60 day cycle and is an established source of subseasonal predictability: it modulates the
-North Pacific jet, which drives atmospheric rivers into the western United States. An active
+30–60 day cycle and is an established source of subseasonal predictability: the MJO can modulate the North Pacific jet and thereby alter the probability, track, and moisture transport of Pacific storms and atmospheric rivers affecting the western United States. An active
 North Pacific storm track would produce both bigger swell at Hawaii and, one to three weeks
 later, more storms over Utah. The buoy would be a symptom, not a cause.
 
@@ -193,8 +191,7 @@ will not find a signal that is absent; it will find a more elaborate way to over
 
 ## Why so many people believe it
 
-The base rate is the answer, and it is worth stating plainly, because the illusion is a
-genuinely easy one to fall into.
+The base rate appears to explain much of the folklore’s apparent success, and it is worth stating plainly, because the illusion is a genuinely easy one to fall into.
 
 A Wasatch winter contains something like 16 storms. Ask "will a storm start in the next nine
 days?" on a random winter day and the answer is yes about 63% of the time, for free, with no
@@ -230,8 +227,7 @@ it:
 - **The MJO mechanism is itself weak here, and ambiguous.** Swell at 51001 genuinely is higher
   in the MJO phases the hypothesis predicts (2.98 m against 2.82 m) but the difference is
   only 0.18 of a standard deviation, invisible on any given day. That is where the folklore's
-  chain actually breaks: the buoy is a very crude MJO index, too crude to read. The MJO→snow
-  half of the chain was weaker still, and it disagreed between the pre-2014 and post-2014
+  chain actually breaks: the buoy is, at best, a crude indirect proxy for circulation states that may covary with the MJO;     it is not a standard MJO index. The association between MJO phase and Utah snow events was weaker still, and it disagreed between the pre-2014 and post-2014
   eras (at the 1.0-inch storm definition, a lagged favourable-versus-unfavourable rate ratio
   of 0.906 before the boundary against 1.507 after), which is confounded with a
   change in how the MJO index itself is calculated at the end of 2013. A data artefact and a
