@@ -50,10 +50,7 @@ missing baseline is the whole story, and it is what this project set out to supp
 ## Why it cannot work the way it is described
 
 The usual explanation is that a low-pressure system passes the buoy and later arrives over
-Utah. The timing does not work. Long-period ocean swell travels roughly 2,000 km per day, so
-a storm near the Aleutians sends swell to Hawaii within one to two days, and that same storm
-would reach Utah in three to five days, not fourteen. Whatever the buoy is seeing, it is not
-the storm that later hits the Wasatch.
+Utah. The timing does not work. Long-period ocean swell travels roughly 1,000 km per day, so a storm near the Aleutians sends swell to Hawaii within three to five days with the storm’s weather reaching Utah in roughly the same amount of time, not fourteen days. Whatever the buoy is seeing, it is not ocean swell that later hits the Wasatch.
 
 If a real signal exists, then, the buoy has to be a *proxy for a large-scale atmospheric
 pattern* rather than a tracker of individual storms. The obvious candidate is the
