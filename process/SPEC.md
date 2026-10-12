@@ -43,8 +43,10 @@ Since the mid-2000s, a community of Utah skiers has tracked NOAA buoy 51101, a
 > When wave height spikes ("a buoy pop"), the Wasatch mountains get a storm about two
 > weeks later. Bigger pop, bigger storm.
 
-Claimed accuracy is around 80%, self-reported, over small samples, with no baseline
-quoted. No published study of the claim exists.
+Claimed accuracy is around 66%, self-reported by the founder: 8 of the 12 pops he followed
+in one season (October 2021 – January 2022) ended in Utah snowfall (Ski Magazine,
+7 November 2022; republished on Yahoo Sports). One season, 12 events, no baseline quoted.
+No published study of the claim exists.
 
 **Caveat on the buoy the folklore names (added 0.7).** 51101's archive begins 2008-02-21
 (Section 3.1), so it did not exist for most of this study's exploration winters — 10 of
@@ -58,9 +60,16 @@ community's own start date is not documented; what is documented is when the dat
 The stated explanation is that a low-pressure system passes the buoy and later reaches
 Utah. The timing does not work.
 
-Long-period ocean swell travels roughly 2,000 km per day. A storm near the Aleutians
-sends swell to Hawaii within 1–2 days. That same storm would reach Utah in 3–5 days,
-not 14.
+The buoy sees a storm only after its swell has crossed the ocean, and by then the storm
+is already days old. In deep water swell energy travels at the group speed
+cg = gT/4π: about 670 km per day for 10-second swell and 940 km per day for 14-second
+swell (20-second swell is about 1,350 km per day). The storms that raise large swell at
+51001 sit roughly 3,000–4,500 km away (Aleutians, Gulf of Alaska, western Pacific), so
+their swell takes about 3–7 days to arrive. A mid-latitude storm lives for a few days to
+about a week and typically takes a few days to cross to the western United States. By the
+time a pop is recorded the storm that caused it has already reached North America or
+dissipated; it is not 10–18 days away. (Order-of-magnitude figures; individual storms
+vary.)
 
 So the buoy is not tracking the storm that later hits Utah.
 
@@ -109,7 +118,7 @@ Never `KFold` with `shuffle=True`.
 No accuracy, hit rate, or score may be reported without the corresponding baseline
 number next to it in the same table or sentence.
 
-The folklore's "83% accurate" is the failure mode this rule prevents. In a Wasatch
+The folklore's "66% accurate" is the failure mode this rule prevents. In a Wasatch
 winter, most two-week windows contain a storm anyway, so a high hit rate may be
 entirely base rate.
 

@@ -6,8 +6,9 @@ tracking the storm itself; it would have to be a proxy for the MJO and the North
 storm track. The rule was explored on 16 winters, then run once on 6 held-out winters that
 were sealed until the rule and its pass mark were locked. After a pop a storm followed
 0.6818 of the time, against a base rate of 0.6339: a ratio of 1.0755 against a pre-declared
-bar of 1.20, so the null is confirmed. The chain breaks at the first link: swell is higher in
-the favourable MJO phases by only 0.18 of a standard deviation.
+bar of 1.20, so the null is confirmed. The chain looks weakest at its first link: on the
+exploration winters, same-day swell is higher in the favourable MJO phases by only 0.18 of a
+standard deviation.
 
 ![Four exploration winters, each showing the Wasatch mean SWE curve with storm events shaded, every buoy pop marked, and each pop's 10 to 18 day window drawn as a bar](outputs/figures/hypothesis_pops_over_swe_grid.png)
 
@@ -31,7 +32,8 @@ The project is complete. [`process/SPEC.md`](process/SPEC.md) is the method and 
 of truth, [`process/STATUS.md`](process/STATUS.md) the state,
 [`process/DECISIONS.md`](process/DECISIONS.md) the open questions and the findings log.
 Every number below is quoted from one of those files or from a report in `outputs/`; nothing
-here was computed for the write-up.
+here was computed for the write-up, with one exception, flagged where it appears (the chance
+level of the storm-detector check).
 
 ---
 
@@ -43,13 +45,17 @@ few hundred kilometres northwest of Kauai. The rule they use is simple:
 > When wave height spikes ("a buoy pop"), the Wasatch gets a storm about two weeks later.
 > Bigger pop, bigger storm.
 
-The claim has a real following and a self-reported accuracy of around 80%, over small
-samples, with no baseline ever quoted beside it. No published study of it exists. That
-missing baseline is the whole story, and it is what this project set out to supply.
+The claim has a real following and a self-reported accuracy of around 66%: its founder,
+Mike Ruzek, counted 8 of the 12 pops he followed from October 2021 to January 2022 as ending
+in Utah snowfall ([Ski Magazine, 7 November 2022](https://www.skimag.com/culture/the-powder-buoy-storm-predictions-explained/),
+republished on [Yahoo Sports](https://sports.yahoo.com/buoy-pacific-ocean-predict-next-193056890.html)).
+That is one season and 12 events, with no baseline ever quoted beside it. No published study
+of it exists. That missing baseline is the whole story, and it is what this project set out
+to supply.
 
 ## Why it cannot work the way it is described
 
-The folklore explanation is that a low-pressure system passes the buoy and later arrives over Utah. The timing does not work. In deep water, swell-group speed depends on period: approximately 670 km/day for 10-second swell and 940 km/day for 14-second swell. Swell from a distant North Pacific storm can reach Hawaii within several days, whereas the storm’s downstream influence on Utah depends on atmospheric steering and development. A direct ‘the same storm reaches Utah two weeks later’ explanation is therefore physically oversimplified and would require a specific synoptic analysis. Very simply: whatever the buoy is seeing, it is not the storm that later hits the Wasatch.
+The folklore explanation is that a low-pressure system passes the buoy and later arrives over Utah. The timing does not work, because the buoy sees a storm only after its swell has crossed the ocean, and by then the storm is already days old. In deep water the energy of a swell travels at its group speed, which depends on period: about 670 km/day for 10-second swell and 940 km/day for 14-second swell. The storms that raise big swell at the buoy sit roughly 3,000 to 4,500 km away, over the Aleutians, the Gulf of Alaska or the western Pacific, so their swell takes about 3 to 7 days to arrive. A mid-latitude storm lives for a few days to about a week and typically takes a few days to cross to the western United States. By the time a pop is recorded, the storm that caused it has already reached North America or dissipated, not 10 to 18 days away. A pop is a lagging record of a storm that is already days old, not an early warning of one. Whatever the buoy is seeing, it is not the same storm that later hits the Wasatch. (These are order-of-magnitude figures; individual storms vary.)
 
 If a real signal exists, then, the buoy has to be a *proxy for a large-scale atmospheric
 pattern* rather than a tracker of individual storms. The obvious candidate is the
@@ -67,7 +73,7 @@ That is the version of the folklore worth testing, and it is why this study exis
 record: 51101's archive does not begin until February 2008, so it did not exist for most of
 the winters studied here. Where the two overlap they agree closely: same-day daily-mean wave
 heights correlate at 0.98 over 3,738 overlapping days, which is what licenses 51001 as the
-stand-in. 51001's own record is not clean either: 22.2% of days are missing, including a
+stand-in. 51001's own record is not clean either: 22.2% of days have no observations at all (24.2% have no usable wave height), including a
 continuous 2,068-day hole from December 2009 to August 2015. Gaps were left as gaps and
 counted, never filled.
 
@@ -94,13 +100,17 @@ height at 51001 of at least **3.9530 m**, the 90th percentile of the exploration
 carried across as a fixed value in metres and deliberately *not* recomputed on the held-out
 winters. A *storm day* is a day with an SWE gain of at least **0.5 inches at two or more of
 the reporting SNOTEL stations**; that definition was chosen because it detects 15.4 storm
-events per winter, inside the 15–30 a Wasatch winter plausibly contains, where the more
+events per winter, inside the 15–30 a Wasatch winter was assumed to contain (a working range, not a sourced figure), where the more
 conventional 1.0-inch threshold finds only 6.9 and is really detecting a storm's biggest day
 rather than the storm. The detector was validated against an independent instrument before it
 was trusted: at the 1.0-inch definition, 111 of 111 SWE-detected storm events coincide within
 a day with a gauge precipitation increment at two or more stations, the gauge being a
 physically separate instrument from the snow pillow at the same sites, so this is
-corroboration rather than circularity. The question asked of each pop is the folklore's own:
+corroboration rather than circularity. The baseline for that match is not zero: a randomly
+chosen three-day winter window contains such a gauge increment 79% of the time (53% if the
+increment must exceed 0.2 inch, a threshold at which all 111 events still coincide), so 111
+of 111 is well above chance but is not the near-certain contrast it might sound like. (That
+baseline was checked after the write-up, in review, on exploration winters only.) The question asked of each pop is the folklore's own:
 **does a storm begin between 10 and 18 days later?** One window, no lag scan, no second look.
 
 ![Storm detector check for winter 2016: shaded bands mark each detected storm event on the cross-station mean SWE curve and its daily gains](outputs/figures/storm_detector_check_2016.png)
@@ -193,8 +203,8 @@ will not find a signal that is absent; it will find a more elaborate way to over
 
 The base rate appears to explain much of the folklore’s apparent success, and it is worth stating plainly, because the illusion is a genuinely easy one to fall into.
 
-A Wasatch winter contains something like 16 storms. Ask "will a storm start in the next nine
-days?" on a random winter day and the answer is yes about 63% of the time, for free, with no
+A Wasatch winter contains something like 16 storms. Ask "will a storm start in the nine-day
+window that opens ten days from now?" on a random winter day and the answer is yes about 63% of the time, for free, with no
 buoy, no forecast and no skill whatsoever. Against that, "a storm followed 68% of the time
 after a pop" stops sounding like a discovery. It is 63% wearing a hat.
 
@@ -206,7 +216,7 @@ nothing, 14 of 44. Nobody keeps that ledger, so the rule accumulates a long reco
 successes while never being tested at all.
 
 This is the failure mode the project's own rule 2.2, *no accuracy figure may ever be reported
-without its baseline beside it*, exists to prevent. The folklore's "80% accurate" is not a
+without its baseline beside it*, exists to prevent. The folklore's "66% accurate" is not a
 lie. It is a number with the interesting half removed.
 
 ## What was not tested
@@ -216,7 +226,7 @@ it:
 
 - **Wave height only.** Not swell *period* or *direction*. A long-period swell from the
   northwest is the physical signature of a distant, energetic North Pacific storm, while
-  short-period swell is local wind chop, and filtering for the former is the most physically
+  short-period waves are mostly locally generated wind sea, and filtering for the former is the most physically
   motivated of the untested alternatives. It was deliberately not tried here, because testing
   variables until one clears a bar the declared one failed is exactly the trap the sealed set
   exists to prevent. It would need a fresh study with its own sealed winters. The popular
@@ -227,7 +237,13 @@ it:
 - **The MJO mechanism is itself weak here, and ambiguous.** Swell at 51001 genuinely is higher
   in the MJO phases the hypothesis predicts (2.98 m against 2.82 m) but the difference is
   only 0.18 of a standard deviation, invisible on any given day. That is where the folklore's
-  chain actually breaks: the buoy is, at best, a crude indirect proxy for circulation states that may covary with the MJO;     it is not a standard MJO index. The association between MJO phase and Utah snow events was weaker still, and it disagreed between the pre-2014 and post-2014
+  chain looks weakest: the buoy is, at best, a crude indirect proxy for circulation states that
+  may covary with the MJO; it is not a standard MJO index. One limit on this: the swell
+  comparison is same-day only, whereas the MJO's influence on the North Pacific is expected to
+  act with a lag, so a lagged comparison could look different and was not run. The second
+  link, MJO phase to Utah storms, was not robust either. Over the following 1 to 14 days the
+  favourable-to-unfavourable storm-rate ratio was 1.133 at the 1.0-inch storm definition but
+  1.002 at the 0.5-inch one, and it disagreed between the pre-2014 and post-2014
   eras (at the 1.0-inch storm definition, a lagged favourable-versus-unfavourable rate ratio
   of 0.906 before the boundary against 1.507 after), which is confounded with a
   change in how the MJO index itself is calculated at the end of 2013. A data artefact and a
@@ -239,7 +255,9 @@ it:
   *Daily mean wave height at 51001 by MJO phase, on coherent-MJO days only (amplitude > 1),
   against the all-day mean of 2.862 m (dashed). The figure is a descriptive sweep and says so
   on its face: no individual phase in it is a finding. The declared test behind it groups the
-  favourable phases 6–8 against the unfavourable 2–4 and gives the 2.98 m against 2.82 m above:
+  favourable phases 6–8 against the unfavourable 2–4 (the published signal is strongest in
+  phases 6–7, western Pacific; phase 8 was included as declared and is not western Pacific,
+  and the published work covers the western US broadly, not the Wasatch specifically) and gives the 2.98 m against 2.82 m above:
   the direction the hypothesis predicts, and only 0.18 of a standard deviation of it. That is
   the whole of the mechanism the folklore would need. Exploration winters, EXPLORATORY.*
 - **Six held-out winters give a directional answer, not a precise one.** The held-out set was
